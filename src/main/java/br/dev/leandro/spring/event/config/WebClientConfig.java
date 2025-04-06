@@ -1,6 +1,6 @@
 package br.dev.leandro.spring.event.config;
 
-import br.dev.leandro.spring.event.keycloak.KeycloakProperties;
+import br.dev.leandro.spring.event.security.keycloak.KeycloakProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

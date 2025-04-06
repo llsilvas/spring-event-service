@@ -1,4 +1,4 @@
-package br.dev.leandro.spring.event.keycloak;
+package br.dev.leandro.spring.event.security.keycloak;
 
 import lombok.Getter;
 import lombok.Setter;

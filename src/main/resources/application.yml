@@ -10,6 +10,7 @@ spring:
     config:
       enabled: false
 
+
 #  cloud:
 #    config:
 #      fail-fast: true
@@ -18,9 +19,9 @@ spring:
 #        initial-interval: 2000
 #        multiplier: 1.5
 #        max-interval: 10000
-    bus:
-      refresh:
-        enabled: true
+#    bus:
+#      refresh:
+#        enabled: true
   security:
     oauth2:
       resourceserver:
@@ -38,6 +39,35 @@ spring:
     host: ${SPRING_RABBITMQ_HOST:localhost}
     port: 5672
     connection-timeout: 5
+
+  datasource:
+    url: jdbc:mysql://${DB_MYSQL_URI:localhost}:3306/ticketdb?serverTimezone=UTC&useSSL=false
+    username: root
+    password: admin
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  flyway:
+    url: jdbc:mysql://${DB_MYSQL_URI:localhost}:3306/ticketdb?serverTimezone=UTC&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    user: root
+    password: admin
+    enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+    open-in-view: false
+
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: deferred
 
 loki:
   url: "http://${LOKI_URL:localhost}:3100/loki/api/v1/push"
@@ -71,15 +101,19 @@ logging:
   level:
     root: INFO
     org.springframework.web: INFO
-    org.springframework.boot: INFO
+    org.springframework.boot: WARN
     org.springframework.security: INFO
     org.springframework.cloud.bus: INFO
     org.springframework.cloud: INFO
     org.springframework.cloud.config: INFO
+    org.hibernate: WARN
     org.keycloak: INFO
     io.opentelemetry: INFO
     io.micrometer: INFO
 otel:
+  instrumentation:
+    jdbc:
+      enabled: false
   logs:
     exporter: none
   metrics:

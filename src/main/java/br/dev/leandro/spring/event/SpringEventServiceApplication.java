@@ -1,6 +1,6 @@
 package br.dev.leandro.spring.event;
 
-import br.dev.leandro.spring.event.keycloak.KeycloakProperties;
+import br.dev.leandro.spring.event.security.keycloak.KeycloakProperties;
 import lombok.extern.java.Log;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
