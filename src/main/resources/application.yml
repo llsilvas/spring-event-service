@@ -1,98 +1,51 @@
-server:
-  port: 8092
-
+# ------------------------------------
+# Configuração base da aplicação
+# ------------------------------------
 spring:
+  # Nome da aplicação, pode ser sobrescrito via env VAR
   application:
-    name: spring-event-service
-#  config:
-#    import: optional:configserver:http://${SPRING_CONFIG_SERVER:localhost}:8888  # Config Server opcional
+    name: ${SPRING_APP_NAME:spring-event-service}
+
+  # Perfil padrão (quando SPRING_PROFILES_ACTIVE não estiver definido)
+  profiles:
+    default: local
+
+  # Desabilita Spring Cloud Config por padrão
   cloud:
     config:
       enabled: false
 
-
-#  cloud:
-#    config:
-#      fail-fast: true
-#      retry:
-#        max-attempts: 6
-#        initial-interval: 2000
-#        multiplier: 1.5
-#        max-interval: 10000
-#    bus:
-#      refresh:
-#        enabled: true
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://${KEYCLOAK_URL}:8443/realms/event-management
-          jwk-set-uri: http://${KEYCLOAK_URL}:8443/realms/event-management/protocol/openid-connect/certs
-  keycloak:
-    admin:
-      client-id: ${KEYCLOAK_CLIENT_ID:user-service-admin}
-      client-secret: ${KEYCLOAK_CLIENT_SECRET:default-secret}  # Nunca manter senhas reais aqui, apenas para fallback
-      auth-server-url: http://${KEYCLOAK_AUTH_SERVER_URL:localhost:8443}
-      realm: ${KEYCLOAK_REALM:event-management}
-
-  rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST:localhost}
-    port: 5672
-    connection-timeout: 5
-
-  datasource:
-    url: jdbc:mysql://${DB_MYSQL_URI:localhost}:3306/ticketdb?serverTimezone=UTC&useSSL=false
-    username: root
-    password: admin
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  flyway:
-    url: jdbc:mysql://${DB_MYSQL_URI:localhost}:3306/ticketdb?serverTimezone=UTC&useSSL=false
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    user: root
-    password: admin
-    enabled: true
-
-  jpa:
-    hibernate:
-      ddl-auto: none
-    properties:
-      hibernate:
-        format_sql: true
-    show-sql: true
-    open-in-view: false
-
+  # Configurações JPA comuns
   data:
     jpa:
       repositories:
         bootstrap-mode: deferred
 
-loki:
-  url: "http://${LOKI_URL:localhost}:3100/loki/api/v1/push"
-  jobName: ${LOKI_JOB_NAME:spring-event-service}
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true    # formata SQL no console
+    open-in-view: false    # evita manutenção de sessão aberta
 
+# Configuração de documentação
+springdoc:
+  api-docs:
+    path: /event/api-docs
+  swagger-ui:
+    path: /event/swagger-ui.html
+  default-produces-media-type: application/json
+
+# Endpoints de management (health, metrics, etc.)
 management:
   endpoints:
     web:
       exposure:
-        include: health, metrics, prometheus, info, refresh, bus-refresh
+        include: health,metrics,prometheus,info,refresh,bus-refresh
   tracing:
     sampling:
-      probability: 1.0  # 100% das requisições serão rastreadas
+      probability: 1.0      # amostragem 100% para tracing
 
-
-springdoc:
-  api-docs:
-    path: /user/api-docs
-  swagger-ui:
-    path: /user/swagger-ui.html
-  default-produces-media-type: application/json
-
-app:
-  version: @project.version@
-
+# Padrões de log e níveis comuns
 logging:
   pattern:
     correlation: '%X{traceId:-} %X{spanId:-}'
@@ -103,22 +56,23 @@ logging:
     org.springframework.web: INFO
     org.springframework.boot: WARN
     org.springframework.security: INFO
-    org.springframework.cloud.bus: INFO
-    org.springframework.cloud: INFO
-    org.springframework.cloud.config: INFO
-    org.hibernate: WARN
-    org.keycloak: INFO
     io.opentelemetry: INFO
     io.micrometer: INFO
+
+# Configurações OpenTelemetry
 otel:
   instrumentation:
     jdbc:
-      enabled: false
+      enabled: false        # desabilita instrumentação JDBC
   logs:
-    exporter: none
+    exporter: none         # desabilita exportação de logs
   metrics:
-    exporter: none
+    exporter: none         # desabilita exportação de métricas
 
+# Versão da aplicação
+app:
+  version: @project.version@
 
-
-
+# Porta HTTP padrão
+server:
+  port: ${SERVER_PORT:8092}

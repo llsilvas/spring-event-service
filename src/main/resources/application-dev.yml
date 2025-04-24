@@ -1,0 +1,55 @@
+spring:
+  profiles: dev
+
+  datasource:
+    # MySQL ambiente dev
+    url: jdbc:mysql://${DB_HOST:dev-db.internal}:3306/ticketdb
+    username: ${DB_USER:dev_user}
+    password: ${DB_PASSWORD:dev_pass}
+
+  flyway:
+    url: jdbc:mysql://${DB_HOST:dev-db.internal}:3306/ticketdb
+    user: ${DB_USER:dev_user}
+    password: ${DB_PASSWORD:dev_pass}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://${KEYCLOAK_URL:keycloak.dev.company.com}/realms/event-management
+          jwk-set-uri: https://${KEYCLOAK_URL:keycloak.dev.company.com}/realms/event-management/protocol/openid-connect/certs
+
+  keycloak:
+    admin:
+      client-id: ${KEYCLOAK_CLIENT_ID:user-service-admin}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET:dev-secret}
+      auth-server-url: https://${KEYCLOAK_URL:keycloak.dev.company.com}
+      realm: ${KEYCLOAK_REALM:event-management}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq.dev.internal}
+    port: ${RABBITMQ_PORT:5672}
+    connection-timeout: 5
+
+loki:
+  url: ${LOKI_URL:http://loki.dev.internal:3100/loki/api/v1/push}
+  jobName: ${LOKI_JOB_NAME:spring-event-service}
+
+# Padrões de log
+logging:
+  pattern:
+    correlation: '%X{traceId:-} %X{spanId:-}'
+    level: '%-5level [${spring.application.name}]'
+  include-application-name: true
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.boot: WARN
+    org.springframework.security: INFO
+    io.opentelemetry: INFO
+    io.micrometer: INFO

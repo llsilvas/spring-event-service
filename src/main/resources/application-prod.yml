@@ -1,0 +1,47 @@
+spring:
+  profiles: prod
+
+  datasource:
+    # MySQL produção (credenciais via env vars)
+    url: jdbc:mysql://${DB_HOST:prod-db.internal}:3306/ticketdb
+    username: ${DB_USER:prod_user}
+    password: ${DB_PASSWORD}
+
+  flyway:
+    url: jdbc:mysql://${DB_HOST:prod-db.internal}:3306/ticketdb
+    user: ${DB_USER:prod_user}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://${KEYCLOAK_URL:keycloak.company.com}/realms/event-management
+          jwk-set-uri: https://${KEYCLOAK_URL:keycloak.company.com}/realms/event-management/protocol/openid-connect/certs
+
+  keycloak:
+    admin:
+      client-id: ${KEYCLOAK_CLIENT_ID:user-service-admin}
+      client-secret: ${KEYCLOAK_CLIENT_SECRET}
+      auth-server-url: https://${KEYCLOAK_URL:keycloak.company.com}
+      realm: ${KEYCLOAK_REALM:event-management}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq.prod.internal}
+    port: ${RABBITMQ_PORT:5672}
+    connection-timeout: 5
+
+management:
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+loki:
+  url: ${LOKI_URL:https://loki.company.com/loki/api/v1/push}
+  jobName: ${LOKI_JOB_NAME:spring-event-service}

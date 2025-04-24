@@ -26,9 +26,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/user/swagger-ui/**").permitAll()
-                        .requestMatchers("/user/swagger-ui.html").permitAll()
-                        .requestMatchers("/user/api-docs/**").permitAll()
+                        .requestMatchers("/event/swagger-ui/**").permitAll()
+                        .requestMatchers("/event/swagger-ui.html").permitAll()
+                        .requestMatchers("/event/api-docs/**").permitAll()
                         .anyRequest().authenticated() // Qualquer outra requisição deve estar autenticada
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
