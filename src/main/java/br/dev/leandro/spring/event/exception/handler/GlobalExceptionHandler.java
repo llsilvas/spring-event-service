@@ -1,13 +1,13 @@
 package br.dev.leandro.spring.event.exception.handler;
 
+import br.dev.leandro.spring.event.exception.ApiErrorResponse;
 import br.dev.leandro.spring.event.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.ErrorResponse;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -17,54 +17,40 @@ import java.time.Instant;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    public static final String TIMESTAMP = "timestamp";
-    public static final String PATH = "path";
-
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
-        ErrorResponse errorResponse = ErrorResponse.builder(e, HttpStatus.FORBIDDEN, e.getMessage())
-                .build();
-        log.error("Access denied: {}", errorResponse);
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    public ResponseEntity<ApiErrorResponse> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+        return buildErrorResponse(e, HttpStatus.FORBIDDEN, e.getMessage(), request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException e) {
-        ErrorResponse errorResponse = ErrorResponse.builder(e, HttpStatus.UNAUTHORIZED, e.getMessage())
-                .build();
-        log.error("Authentication exception: {}", errorResponse);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    public ResponseEntity<ApiErrorResponse> handleAuthenticationException(AuthenticationException e, HttpServletRequest request) {
+        return buildErrorResponse(e, HttpStatus.UNAUTHORIZED, e.getMessage(), request);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request) {
-        ErrorResponse errorResponse = ErrorResponse.builder(e, HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage())
-                .property(TIMESTAMP, Instant.now())
-                .property(PATH, request.getRequestURI())
-                .build();
-
-        log.error("Error exception: {}", errorResponse);
-        log.error("Exception: {}", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    public ResponseEntity<ApiErrorResponse> handleGenericException(Exception e, HttpServletRequest request) {
+        return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
-        ErrorResponse errorResponse = ErrorResponse.builder(ex, HttpStatus.NOT_FOUND, ex.getMessage())
-                .property(TIMESTAMP, Instant.now())
-                .property(PATH, request.getRequestURI())
-                .build();
-        log.error("Resource not found: {}", errorResponse);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    public ResponseEntity<ApiErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
-        ErrorResponse errorResponse = ErrorResponse.builder(ex, HttpStatus.BAD_REQUEST, "Invalid argument provided")
-                .property(TIMESTAMP, Instant.now())
-                .property(PATH, request.getRequestURI())
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(Exception e, HttpStatus status, String message, HttpServletRequest request) {
+        ApiErrorResponse errorResponse = ApiErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .message(message)
+                .path(request.getRequestURI())
                 .build();
-        log.error("Illegal argument: {}", errorResponse);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        log.error("Exception handled: {}", errorResponse, e);
+        return ResponseEntity.status(status).body(errorResponse);
     }
 }
