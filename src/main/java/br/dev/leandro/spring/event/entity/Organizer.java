@@ -33,10 +33,11 @@ public class Organizer {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrganizerRole role;
-
+    @Column(nullable = false)
+    private String name;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrganizerStatus status;
+    private OrganizerStatus status = OrganizerStatus.ACTIVE;
     @CreatedBy
     @ManyToOne
     @JoinColumn(name = "created_by")

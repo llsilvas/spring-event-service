@@ -5,6 +5,7 @@ import br.dev.leandro.spring.event.entity.Organizer;
 import br.dev.leandro.spring.event.mapper.OrganizerMapper;
 import br.dev.leandro.spring.event.service.OrganizerService;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,27 +22,31 @@ public class OrganizerController {
     }
 
     @PostMapping
-    public void createOrganizer(@RequestBody OrganizerDto organizerDto) {
+    public ResponseEntity<OrganizerDto> createOrganizer(@RequestBody OrganizerDto organizerDto) {
         Organizer organizer = organizerService.create(organizerDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(organizerMapper.toDto(organizer));
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<OrganizerDto> updateOrganizer(@PathVariable Long id, @RequestBody OrganizerDto organizerDto) {
-        return ResponseEntity.ok(organizerDto);
+        Organizer organizer = organizerService.update(id, organizerDto);
+        return ResponseEntity.ok(organizerMapper.toDto(organizer));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrganizerDto> getOrganizerById(@PathVariable Long id) {
+        OrganizerDto organizerDto = organizerService.getById(id);
         return ResponseEntity.ok(organizerDto);
     }
 
     @GetMapping
     public ResponseEntity<Iterable<OrganizerDto>> listOrganizers(Pageable pageable) {
-        Iterable<OrganizerDto> organizerDtos = null;
-        return ResponseEntity.ok(null);
+        Iterable<OrganizerDto> organizerDtos = organizerService.getAll(pageable);
+        return ResponseEntity.ok(organizerDtos);
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrganizer(@PathVariable Long id) {
+        organizerService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
