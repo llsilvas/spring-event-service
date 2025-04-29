@@ -44,7 +44,7 @@ public class Event {
     private EventStatus status;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EventOrganizer> organizers;
+    private List<Organizer> organizers;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TicketType> ticketTypes;
