@@ -6,19 +6,20 @@ import br.dev.leandro.spring.event.entity.EventStatus;
 import br.dev.leandro.spring.event.exception.ResourceNotFoundException;
 import br.dev.leandro.spring.event.mapper.EventMapper;
 import br.dev.leandro.spring.event.repository.EventRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-@RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
     public static final String EVENT_NOT_FOUND_MESSAGE = "Evento não encontrado!";
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
+
+    public EventServiceImpl(EventRepository eventRepository, EventMapper eventMapper) {
+        this.eventRepository = eventRepository;
+        this.eventMapper = eventMapper;
+    }
 
     @Override
     public Event create(EventDto dto) {
@@ -28,7 +29,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Event update(Long id, EventDto dto) {
-        Event event = eventRepository.findById(id)
+        Event event = eventRepository.findByIdAndStatus(id, EventStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException(EVENT_NOT_FOUND_MESSAGE));
         eventMapper.updateEntityFromDto(dto, event);
         return eventRepository.save(event);
@@ -36,7 +37,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventDto getById(Long id) {
-        return eventRepository.findById(id)
+        return eventRepository.findByIdAndStatus(id, EventStatus.ACTIVE)
                 .map(eventMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException(EVENT_NOT_FOUND_MESSAGE));
     }
@@ -49,7 +50,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void delete(Long id) {
-        eventRepository.findById(id)
+        eventRepository.findByIdAndStatus(id, EventStatus.ACTIVE)
                 .map(event -> {
                     event.setStatus(EventStatus.DELETED);
                     return eventRepository.save(event);

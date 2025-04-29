@@ -78,14 +78,14 @@ class EventServiceImplTest {
     class UpdateEventTests{
         @Test
         void shouldUpdateExistingEvent() {
-            when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+            when(eventRepository.findByIdAndStatus(1L, EventStatus.ACTIVE)).thenReturn(Optional.of(event));
             doNothing().when(eventMapper).updateEntityFromDto(eventDto, event);
             when(eventRepository.save(event)).thenReturn(event);
 
             Event result = eventService.update(1L, eventDto);
 
             assertEquals(event, result);
-            verify(eventRepository).findById(1L);
+            verify(eventRepository).findByIdAndStatus(1L, EventStatus.ACTIVE);
             verify(eventMapper).updateEntityFromDto(eventDto, event);
             verify(eventRepository).save(event);
             verifyNoMoreInteractions(eventRepository);
@@ -93,11 +93,11 @@ class EventServiceImplTest {
 
         @Test
         void shouldThrowResourceNotFoundExceptionWhenEventNotFound() {
-            when(eventRepository.findById(1L)).thenReturn(Optional.empty());
+            when(eventRepository.findByIdAndStatus(1L, EventStatus.ACTIVE)).thenReturn(Optional.empty());
 
             assertThrows(ResourceNotFoundException.class, () -> eventService.update(1L, eventDto));
 
-            verify(eventRepository).findById(1L);
+            verify(eventRepository).findByIdAndStatus(1L, EventStatus.ACTIVE);
             verifyNoMoreInteractions(eventRepository);
         }
     }
@@ -106,24 +106,24 @@ class EventServiceImplTest {
     class GetEventTests{
         @Test
         void shouldReturnEventDtoWhenEventFound() {
-            when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+            when(eventRepository.findByIdAndStatus(1L, EventStatus.ACTIVE)).thenReturn(Optional.of(event));
             when(eventMapper.toDto(event)).thenReturn(eventDto);
 
             EventDto result = eventService.getById(1L);
 
             assertEquals(eventDto, result);
-            verify(eventRepository).findById(1L);
+            verify(eventRepository).findByIdAndStatus(1L, EventStatus.ACTIVE);
             verify(eventMapper).toDto(event);
             verifyNoMoreInteractions(eventRepository);
         }
 
         @Test
         void shouldThrowResourceNotFoundExceptionWhenEventNotFound() {
-            when(eventRepository.findById(1L)).thenReturn(Optional.empty());
+            when(eventRepository.findByIdAndStatus(1L, EventStatus.ACTIVE)).thenReturn(Optional.empty());
 
             assertThrows(ResourceNotFoundException.class, () -> eventService.getById(1L));
 
-            verify(eventRepository).findById(1L);
+            verify(eventRepository).findByIdAndStatus(1L, EventStatus.ACTIVE);
             verifyNoMoreInteractions(eventRepository);
         }
     }
@@ -153,7 +153,7 @@ class EventServiceImplTest {
     class DeleteEventTests{
         @Test
         void shouldDeleteExistingEvent() {
-            when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+            when(eventRepository.findByIdAndStatus(1L, EventStatus.ACTIVE)).thenReturn(Optional.of(event));
             when(eventRepository.save(event)).thenReturn(event);
             eventService.delete(1L);
             assertEquals(EventStatus.DELETED, event.getStatus());
@@ -163,9 +163,9 @@ class EventServiceImplTest {
 
         @Test
         void shouldThrowResourceNotFoundExceptionWhenEventNotFound() {
-            when(eventRepository.findById(1L)).thenReturn(Optional.empty());
+            when(eventRepository.findByIdAndStatus(1L, EventStatus.ACTIVE)).thenReturn(Optional.empty());
             assertThrows(ResourceNotFoundException.class, () -> eventService.delete(1L));
-            verify(eventRepository).findById(1L);
+            verify(eventRepository).findByIdAndStatus(1L, EventStatus.ACTIVE);
             verifyNoMoreInteractions(eventRepository);
         }
     }
