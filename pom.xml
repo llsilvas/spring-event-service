@@ -17,6 +17,7 @@
     <name>spring-event-service</name>
     <description>spring-event-service</description>
 
+    <!-- Properties centralizadas -->
     <properties>
         <java.version>21</java.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
@@ -26,13 +27,21 @@
         <junit.version>5.10.2</junit.version>
         <loki.version>1.5.2</loki.version>
         <wiremock.version>3.4.0</wiremock.version>
-        <flyway.version>10.20.1</flyway.version>
+        <flyway.plugin.version>10.20.1</flyway.plugin.version>
         <mysql.version>8.2.0</mysql.version>
         <lombok.version>1.18.30</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <docker.dockerfile.path>${project.basedir}/Dockerfile</docker.dockerfile.path>
+        <compiler.plugin.version>3.10.1</compiler.plugin.version>
+        <surefire.plugin.version>3.5.2</surefire.plugin.version>
+        <failsafe.plugin.version>3.5.2</failsafe.plugin.version>
+        <jacoco.plugin.version>0.8.11</jacoco.plugin.version>
+        <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
+        <build.helper.plugin.version>3.4.0</build.helper.plugin.version>
+        <git.commit.id.plugin.version>6.0.0</git.commit.id.plugin.version>
     </properties>
 
+    <!-- Importação de BOMs para controle de versões -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -111,8 +120,6 @@
             <scope>test</scope>
         </dependency>
 
-
-
         <!-- Security / OAuth / Keycloak -->
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -124,10 +131,13 @@
             <artifactId>keycloak-spring-boot-starter</artifactId>
             <version>${keycloak.version}</version>
         </dependency>
+        <!-- Security Dependencies -->
+        <!-- Keycloak Admin Client for authentication and authorization management -->
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-admin-client</artifactId>
             <version>${keycloak.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- Observabilidade -->
@@ -226,13 +236,18 @@
 
     <build>
         <finalName>${project.artifactId}</finalName>
+
         <plugins>
-            <!-- Plugin do MapStruct para gerar os mapeadores -->
+
+            <!-- ================= COMPILAÇÃO E PROCESSAMENTO DE ANOTAÇÕES ================= -->
+
+            <!-- Compila código com suporte a Java 21 e processa anotações (Lombok, MapStruct) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>${compiler.plugin.version}</version>
                 <configuration>
+                    <release>${java.version}</release>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.mapstruct</groupId>
@@ -247,6 +262,31 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+
+            <!-- Adiciona fontes geradas automaticamente ao classpath -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${build.helper.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>add-generated-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/annotations</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ================== EMPACOTAMENTO E BUILD ================== -->
+
+            <!-- Cria JAR executável com suporte a camadas Docker -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -263,49 +303,48 @@
                 </configuration>
             </plugin>
 
+            <!-- Injeta git.properties com info do commit atual -->
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
                 <artifactId>git-commit-id-maven-plugin</artifactId>
-                <version>6.0.0</version>
+                <version>${git.commit.id.plugin.version}</version>
                 <configuration>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <offline>true</offline>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
-                    </generateGitPropertiesFilename>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
                     <commitIdGenerationMode>full</commitIdGenerationMode>
                 </configuration>
                 <executions>
                     <execution>
                         <id>get-the-git-infos</id>
+                        <phase>initialize</phase>
                         <goals>
                             <goal>revision</goal>
                         </goals>
-                        <phase>initialize</phase>
                     </execution>
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.eclipse.jkube</groupId>
-                <artifactId>kubernetes-maven-plugin</artifactId>
-                <version>${jkube.version}</version>
-            </plugin>
+            <!-- ================== TESTES ================== -->
 
+            <!-- Executa testes unitários -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.2</version>
+                <version>${surefire.plugin.version}</version>
                 <configuration>
                     <includes>
-                        <include>**/unit/*Test.java</include>
+                        <include>**/unit/**/*.java</include>
                     </includes>
                 </configuration>
             </plugin>
+
+            <!-- Executa testes de integração -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.5.2</version>
+                <version>${failsafe.plugin.version}</version>
                 <executions>
                     <execution>
                         <id>integration-tests</id>
@@ -331,34 +370,48 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-maven-plugin</artifactId>
-                <version>10.20.0</version>
-            </plugin>
 
+            <!-- Gera relatório de cobertura de testes (Jacoco) -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.4.0</version>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>add-generated-sources</id>
-                        <phase>generate-sources</phase>
+                        <id>default-prepare-agent</id>
                         <goals>
-                            <goal>add-source</goal>
+                            <goal>prepare-agent</goal>
                         </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-sources/annotations</source>
-                            </sources>
-                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
 
+            <!-- ================== DEPLOY/INFRA ================== -->
+
+            <!-- Plugin para migrações Flyway -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>${flyway.plugin.version}</version>
+            </plugin>
+
+            <!-- Plugin para build e deploy em Kubernetes/OpenShift -->
+            <plugin>
+                <groupId>org.eclipse.jkube</groupId>
+                <artifactId>kubernetes-maven-plugin</artifactId>
+                <version>${jkube.version}</version>
+            </plugin>
+
         </plugins>
     </build>
+
 
     <profiles>
         <profile>

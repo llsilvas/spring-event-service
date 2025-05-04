@@ -68,3 +68,31 @@ CREATE TABLE event_organizers
     CONSTRAINT FK_event_organizers_created_by FOREIGN KEY (created_by) REFERENCES users (id),
     CONSTRAINT FK_event_organizers_updated_by FOREIGN KEY (updated_by) REFERENCES users (id)
 ) ENGINE = InnoDB;
+
+-- Create the organizers table
+CREATE TABLE organizers
+(
+    id         BIGINT                         NOT NULL AUTO_INCREMENT,
+    name       VARCHAR(255)                   NOT NULL,
+    role       ENUM ('COLLABORATOR', 'OWNER') NOT NULL,
+    status     ENUM ('ACTIVE', 'INACTIVE', 'DELETED') NOT NULL DEFAULT 'ACTIVE',
+    user_id    BIGINT                         NOT NULL,
+    created_by BIGINT,
+    updated_by BIGINT,
+    created_at DATETIME(6),
+    updated_at DATETIME(6),
+    CONSTRAINT PK_organizers PRIMARY KEY (id),
+    CONSTRAINT FK_organizers_user_id FOREIGN KEY (user_id) REFERENCES users (id),
+    CONSTRAINT FK_organizers_created_by FOREIGN KEY (created_by) REFERENCES users (id),
+    CONSTRAINT FK_organizers_updated_by FOREIGN KEY (updated_by) REFERENCES users (id)
+) ENGINE = InnoDB;
+
+-- Create the organizer_events join table
+CREATE TABLE organizer_events
+(
+    organizer_id BIGINT NOT NULL,
+    event_id     BIGINT NOT NULL,
+    CONSTRAINT PK_organizer_events PRIMARY KEY (organizer_id, event_id),
+    CONSTRAINT FK_organizer_events_organizer_id FOREIGN KEY (organizer_id) REFERENCES organizers (id),
+    CONSTRAINT FK_organizer_events_event_id FOREIGN KEY (event_id) REFERENCES events (id)
+) ENGINE = InnoDB;

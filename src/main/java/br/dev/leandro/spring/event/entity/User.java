@@ -29,7 +29,7 @@ public class User {
     @Column(nullable = false)
     private String password;
     @OneToMany(mappedBy = "user")
-    private List<EventOrganizer> eventOrganizers;
+    private List<Organizer> organizers;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @CreationTimestamp

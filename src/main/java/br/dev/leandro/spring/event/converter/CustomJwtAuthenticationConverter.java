@@ -13,7 +13,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class CustomJwtAuthenticationConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
+public class CustomJwtAuthenticationConverter
+        implements Converter<Jwt, Collection<GrantedAuthority>> {
 
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {

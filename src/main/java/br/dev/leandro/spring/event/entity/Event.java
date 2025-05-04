@@ -43,7 +43,7 @@ public class Event {
     @Column(nullable = false)
     private EventStatus status;
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "events")
     private List<Organizer> organizers;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)

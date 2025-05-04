@@ -11,6 +11,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "organizers")
@@ -27,9 +28,14 @@ public class Organizer {
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User user;
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "event_id")
-    private Event event;
+
+    @ManyToMany
+    @JoinTable(
+        name = "organizer_events",
+        joinColumns = @JoinColumn(name = "organizer_id"),
+        inverseJoinColumns = @JoinColumn(name = "event_id")
+    )
+    private List<Event> events;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrganizerRole role;

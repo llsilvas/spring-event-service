@@ -18,7 +18,7 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("User Service API")
+                        .title("Event Service API")
                         .description("Documentação da API utilizando Springdoc-OpenAPI")
                         .version(appVersion)
                         .contact(new Contact()
