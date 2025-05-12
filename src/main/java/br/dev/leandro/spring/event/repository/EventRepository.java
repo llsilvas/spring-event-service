@@ -1,7 +1,7 @@
 package br.dev.leandro.spring.event.repository;
 
 import br.dev.leandro.spring.event.entity.Event;
-import br.dev.leandro.spring.event.entity.EventStatus;
+import br.dev.leandro.spring.event.entity.enums.EventStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;

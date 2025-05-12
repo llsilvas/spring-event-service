@@ -1,6 +1,10 @@
 package br.dev.leandro.spring.event.entity;
 
+import br.dev.leandro.spring.event.entity.enums.OrganizerRole;
+import br.dev.leandro.spring.event.entity.enums.OrganizerStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,33 +29,27 @@ public class Organizer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "user_id", nullable = false, unique = true)
+    private String userId;  // UUID do Keycloak
 
-    @ManyToMany
-    @JoinTable(
-        name = "organizer_events",
-        joinColumns = @JoinColumn(name = "organizer_id"),
-        inverseJoinColumns = @JoinColumn(name = "event_id")
-    )
-    private List<Event> events;
-    @Enumerated(EnumType.STRING)
+    @NotBlank
     @Column(nullable = false)
-    private OrganizerRole role;
-    @Column(nullable = false)
-    private String name;
+    private String organizationName;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrganizerStatus status = OrganizerStatus.ACTIVE;
+    @Email
+    @Column(nullable = false)
+    private String contactEmail;
+    @Column(nullable = false)
+    private String contactPhone;
+    @NotBlank
+    @Column(nullable = false)
+    private String documentNumber;
     @CreatedBy
-    @ManyToOne
-    @JoinColumn(name = "created_by")
-    private User createdBy;
+    private String createdBy;
     @LastModifiedBy
-    @ManyToOne
-    @JoinColumn(name = "updated_by")
-    private User updatedBy;
+    private String updatedBy;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp

@@ -1,6 +1,9 @@
 package br.dev.leandro.spring.event.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,12 +27,15 @@ public class TicketType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     @Column(nullable = false)
     private String name;
 
+    @DecimalMin("0.00")
     @Column(nullable = false)
     private BigDecimal price;
 
+    @Min(1)
     @Column(nullable = false)
     private Integer quantityAvailable;
 
@@ -38,14 +44,10 @@ public class TicketType {
     private Event event;
 
     @CreatedBy
-    @ManyToOne
-    @JoinColumn(name = "created_by")
-    private User createdBy;
+    private String createdBy;
 
     @LastModifiedBy
-    @ManyToOne
-    @JoinColumn(name = "updated_by")
-    private User updatedBy;
+    private String updatedBy;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

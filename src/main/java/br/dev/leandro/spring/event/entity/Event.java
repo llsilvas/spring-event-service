@@ -1,5 +1,6 @@
 package br.dev.leandro.spring.event.entity;
 
+import br.dev.leandro.spring.event.entity.enums.EventStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,21 +44,17 @@ public class Event {
     @Column(nullable = false)
     private EventStatus status;
 
-    @ManyToMany(mappedBy = "events")
-    private List<Organizer> organizers;
+    @Column(name = "organizer_id", nullable = false)
+    private Long organizerId;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TicketType> ticketTypes;
 
     @CreatedBy
-    @ManyToOne
-    @JoinColumn(name = "created_by")
-    private User createdBy;
+    private String createdBy;
 
     @LastModifiedBy
-    @ManyToOne
-    @JoinColumn(name = "updated_by")
-    private User updatedBy;
+    private String updatedBy;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

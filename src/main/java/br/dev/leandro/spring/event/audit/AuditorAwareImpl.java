@@ -1,8 +1,6 @@
 package br.dev.leandro.spring.event.audit;
 
 
-import br.dev.leandro.spring.event.entity.User;
-import br.dev.leandro.spring.event.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,12 +11,11 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class AuditorAwareImpl implements AuditorAware<User> {
+public class AuditorAwareImpl implements AuditorAware<String> {
 
-    private final UserRepository userRepository;
 
     @Override
-    public Optional<User> getCurrentAuditor() {
+    public Optional<String> getCurrentAuditor() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
@@ -28,8 +25,7 @@ public class AuditorAwareImpl implements AuditorAware<User> {
         Object principal = auth.getPrincipal();
 
         if (principal instanceof Jwt jwt) {
-            String email = jwt.getClaimAsString("email"); // ou preferred_username
-            return userRepository.findByEmail(email);
+            return Optional.ofNullable(jwt.getSubject());
         }
 
         return Optional.empty();

@@ -1,7 +1,7 @@
 package br.dev.leandro.spring.event.repository;
 
 import br.dev.leandro.spring.event.entity.Organizer;
-import br.dev.leandro.spring.event.entity.OrganizerStatus;
+import br.dev.leandro.spring.event.entity.enums.OrganizerStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -15,4 +15,6 @@ public interface OrganizerRepository extends PagingAndSortingRepository<Organize
     Page<Organizer> findAllByStatus(OrganizerStatus organizerStatus, Pageable pageable);
 
     Organizer save(Organizer organizer);
+
+    boolean existsByUserId(String userId);
 }

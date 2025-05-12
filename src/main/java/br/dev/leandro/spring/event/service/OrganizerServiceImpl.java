@@ -1,8 +1,10 @@
 package br.dev.leandro.spring.event.service;
 
-import br.dev.leandro.spring.event.controller.dto.OrganizerDto;
+import br.dev.leandro.spring.event.controller.dto.OrganizerCreateDto;
+import br.dev.leandro.spring.event.controller.dto.OrganizerUpdateDto;
 import br.dev.leandro.spring.event.entity.Organizer;
-import br.dev.leandro.spring.event.entity.OrganizerStatus;
+import br.dev.leandro.spring.event.entity.enums.OrganizerStatus;
+import br.dev.leandro.spring.event.exception.BusinessException;
 import br.dev.leandro.spring.event.exception.ResourceNotFoundException;
 import br.dev.leandro.spring.event.mapper.OrganizerMapper;
 import br.dev.leandro.spring.event.repository.OrganizerRepository;
@@ -23,30 +25,33 @@ public class OrganizerServiceImpl implements OrganizerService {
     }
 
     @Override
-    public Organizer create(OrganizerDto organizerDto) {
-        Organizer organizer = organizerMapper.toEntity(organizerDto);
+    public Organizer create(String userId, OrganizerCreateDto organizerCreateDto) {
+        if(organizerRepository.existsByUserId(userId)){
+            throw new BusinessException("Organizador já existe.");
+        }
+        Organizer organizer = organizerMapper.toEntity(organizerCreateDto);
         return organizerRepository.save(organizer);
     }
 
     @Override
-    public Organizer update(Long id, OrganizerDto organizerDto) {
+    public Organizer update(Long id, OrganizerUpdateDto organizerUpdateDto) {
         Organizer organizer = organizerRepository.findByIdAndStatus(id, OrganizerStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException(ORGANIZER_NOT_FOUND_MESSAGE));
-        organizerMapper.updateEntityFromDto(organizerDto, organizer);
+        organizerMapper.updateEntityFromUpdateDto(organizerUpdateDto, organizer);
         return organizerRepository.save(organizer);
     }
 
     @Override
-    public OrganizerDto getById(Long id) {
+    public OrganizerCreateDto getById(Long id) {
         return organizerRepository.findByIdAndStatus(id, OrganizerStatus.ACTIVE)
-                .map(organizerMapper::toDto)
+                .map(organizerMapper::toCreateDto)
                 .orElseThrow(() -> new ResourceNotFoundException(ORGANIZER_NOT_FOUND_MESSAGE));
     }
 
     @Override
-    public Page<OrganizerDto> getAll(Pageable pageable) {
+    public Page<OrganizerCreateDto> getAll(Pageable pageable) {
         return organizerRepository.findAllByStatus(OrganizerStatus.ACTIVE, pageable)
-                .map(organizerMapper::toDto);
+                .map(organizerMapper::toCreateDto);
     }
 
     @Override

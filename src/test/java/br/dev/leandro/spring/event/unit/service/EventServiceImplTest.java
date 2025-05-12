@@ -2,8 +2,7 @@ package br.dev.leandro.spring.event.unit.service;
 
 import br.dev.leandro.spring.event.controller.dto.EventDto;
 import br.dev.leandro.spring.event.entity.Event;
-import br.dev.leandro.spring.event.entity.EventStatus;
-import br.dev.leandro.spring.event.entity.User;
+import br.dev.leandro.spring.event.entity.enums.EventStatus;
 import br.dev.leandro.spring.event.exception.ResourceNotFoundException;
 import br.dev.leandro.spring.event.mapper.EventMapper;
 import br.dev.leandro.spring.event.repository.EventRepository;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -49,7 +47,6 @@ class EventServiceImplTest {
 
     private EventDto eventDto;
     private Event event;
-    private User user;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
 
@@ -58,14 +55,6 @@ class EventServiceImplTest {
         // Configurar datas
         startDateTime = LocalDateTime.now().plusDays(1);
         endDateTime = LocalDateTime.now().plusDays(2);
-
-        // Criar usuário
-        user = User.builder()
-                .id(1L)
-                .name("Usuário de Teste")
-                .email("test@example.com")
-                .password("senha123")
-                .build();
 
         // Criar DTO de evento
         eventDto = new EventDto(
@@ -87,9 +76,9 @@ class EventServiceImplTest {
                 .startDatetime(startDateTime)
                 .endDatetime(endDateTime)
                 .status(EventStatus.ACTIVE)
-                .organizers(new ArrayList<>())
+                .organizerId(1L)
                 .ticketTypes(new ArrayList<>())
-                .createdBy(user)
+                .createdBy("user-id-123")
                 .build();
     }
 

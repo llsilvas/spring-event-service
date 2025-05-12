@@ -21,7 +21,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update      # atualiza schema automaticamente
+      ddl-auto: none      # atualiza schema automaticamente
     show-sql: true          # exibe SQL no console
 
   security:

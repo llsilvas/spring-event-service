@@ -1,6 +1,8 @@
 package br.dev.leandro.spring.event.controller;
 
+import br.dev.leandro.spring.event.controller.dto.OrganizerCreateDto;
 import br.dev.leandro.spring.event.controller.dto.OrganizerDto;
+import br.dev.leandro.spring.event.controller.dto.OrganizerUpdateDto;
 import br.dev.leandro.spring.event.entity.Organizer;
 import br.dev.leandro.spring.event.mapper.OrganizerMapper;
 import br.dev.leandro.spring.event.service.OrganizerService;
@@ -17,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,7 +64,7 @@ public class OrganizerController {
     /**
      * Cria um novo organizador.
      *
-     * @param organizerDto Dados do organizador a ser criado
+     * @param organizerCreateDto Dados do organizador a ser criado
      * @return Organizador criado
      */
     @PostMapping
@@ -70,10 +74,11 @@ public class OrganizerController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     @CacheEvict(allEntries = true)
     public ResponseEntity<OrganizerDto> createOrganizer(
-            @Valid @RequestBody final OrganizerDto organizerDto) {
-        log.info("Criando novo organizador para os eventos: {}", 
-                organizerDto.events() != null ? organizerDto.events().stream().map(e -> e.getId().toString()).reduce((a, b) -> a + ", " + b).orElse("N/A") : "N/A");
-        Organizer organizer = organizerService.create(organizerDto);
+            @Valid @RequestBody final OrganizerCreateDto organizerCreateDto,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String userId = jwt.getSubject();
+        Organizer organizer = organizerService.create(userId, organizerCreateDto);
         log.info("Organizador criado com ID: {}", organizer.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(organizerMapper.toDto(organizer));
@@ -83,7 +88,7 @@ public class OrganizerController {
      * Atualiza um organizador existente.
      *
      * @param id ID do organizador a ser atualizado
-     * @param organizerDto Novos dados do organizador
+     * @param organizerUpdateDto Novos dados do organizador
      * @return Organizador atualizado
      */
     @PutMapping("/{id}")
@@ -97,9 +102,9 @@ public class OrganizerController {
     @CacheEvict(allEntries = true)
     public ResponseEntity<OrganizerDto> updateOrganizer(
             @Parameter(description = "ID do organizador") @PathVariable final Long id,
-            @Valid @RequestBody final OrganizerDto organizerDto) {
+            @Valid @RequestBody final OrganizerUpdateDto organizerUpdateDto) {
         log.info("Atualizando organizador com ID: {}", id);
-        Organizer organizer = organizerService.update(id, organizerDto);
+        Organizer organizer = organizerService.update(id, organizerUpdateDto);
         log.info("Organizador atualizado: {}", organizer.getId());
         return ResponseEntity.ok(organizerMapper.toDto(organizer));
     }
@@ -116,12 +121,12 @@ public class OrganizerController {
     @ApiResponse(responseCode = "200", description = "Organizador encontrado")
     @ApiResponse(responseCode = "404", description = "Organizador não encontrado")
     @Cacheable(key = "#id")
-    public ResponseEntity<OrganizerDto> getOrganizerById(
+    public ResponseEntity<OrganizerCreateDto> getOrganizerById(
             @Parameter(description = "ID do organizador") 
             @PathVariable final Long id) {
         log.info("Buscando organizador com ID: {}", id);
-        OrganizerDto organizerDto = organizerService.getById(id);
-        return ResponseEntity.ok(organizerDto);
+        OrganizerCreateDto organizerCreateDto = organizerService.getById(id);
+        return ResponseEntity.ok(organizerCreateDto);
     }
 
     /**
@@ -135,10 +140,10 @@ public class OrganizerController {
             description = "Lista todos os organizadores com paginação")
     @ApiResponse(responseCode = "200", description = "Lista de organizadores")
     @Cacheable
-    public ResponseEntity<Iterable<OrganizerDto>> listOrganizers(final Pageable pageable) {
+    public ResponseEntity<Iterable<OrganizerCreateDto>> listOrganizers(final Pageable pageable) {
         log.info("Listando organizadores. Page: {}, Size: {}", 
                 pageable.getPageNumber(), pageable.getPageSize());
-        Iterable<OrganizerDto> organizerDtos = organizerService.getAll(pageable);
+        Iterable<OrganizerCreateDto> organizerDtos = organizerService.getAll(pageable);
         return ResponseEntity.ok(organizerDtos);
     }
 
