@@ -1,6 +1,6 @@
 package br.dev.leandro.spring.event.mapper;
 
-import br.dev.leandro.spring.event.controller.dto.EventDto;
+import br.dev.leandro.spring.event.dto.EventDto;
 import br.dev.leandro.spring.event.entity.Event;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;

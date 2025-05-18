@@ -1,6 +1,4 @@
 spring:
-  profiles: docker      # ativa perfil docker
-
   datasource:
     # MySQL em container docker-link
     url: jdbc:mysql://${DB_HOST:mysql}:3306/ticketdb?serverTimezone=UTC&useSSL=false
@@ -38,6 +36,9 @@ spring:
     host: ${RABBITMQ_HOST:rabbitmq}
     port: ${RABBITMQ_PORT:5672}
     connection-timeout: 5
+  config:
+    activate:
+      on-profile: docker
 
 loki:
   # Loki link docker

@@ -1,28 +1,24 @@
 package br.dev.leandro.spring.event.entity;
 
-import br.dev.leandro.spring.event.entity.enums.OrganizerRole;
 import br.dev.leandro.spring.event.entity.enums.OrganizerStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+@Builder
 @Entity
 @Table(name = "organizers")
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 public class Organizer {
 
     @Id
@@ -35,6 +31,7 @@ public class Organizer {
     @NotBlank
     @Column(nullable = false)
     private String organizationName;
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrganizerStatus status = OrganizerStatus.ACTIVE;

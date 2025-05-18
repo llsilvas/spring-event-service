@@ -1,6 +1,6 @@
 package br.dev.leandro.spring.event.service;
 
-import br.dev.leandro.spring.event.controller.dto.EventDto;
+import br.dev.leandro.spring.event.dto.EventDto;
 import br.dev.leandro.spring.event.entity.Event;
 import br.dev.leandro.spring.event.entity.enums.EventStatus;
 import br.dev.leandro.spring.event.exception.ResourceNotFoundException;

@@ -1,6 +1,7 @@
 package br.dev.leandro.spring.event.config;
 
 import br.dev.leandro.spring.event.converter.CustomJwtAuthenticationConverter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +26,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Profile("!test && !local")
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -74,7 +78,7 @@ public class SecurityConfig {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         log.debug("Configurando conversor de autenticação JWT");
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(new CustomJwtAuthenticationConverter());
+        converter.setJwtGrantedAuthoritiesConverter(customJwtAuthenticationConverter);
         return converter;
     }
 }

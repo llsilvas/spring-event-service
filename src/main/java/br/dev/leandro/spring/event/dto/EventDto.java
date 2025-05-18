@@ -1,4 +1,4 @@
-package br.dev.leandro.spring.event.controller.dto;
+package br.dev.leandro.spring.event.dto;
 
 import br.dev.leandro.spring.event.entity.enums.EventStatus;
 import jakarta.validation.constraints.NotBlank;

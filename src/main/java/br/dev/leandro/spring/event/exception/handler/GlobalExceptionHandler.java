@@ -42,7 +42,7 @@ public final class GlobalExceptionHandler {
      * @return Resposta de erro
      */
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiErrorResponse> handleAuthenticationException(
+            public ResponseEntity<ApiErrorResponse> handleAuthenticationException(
             final AuthenticationException e, final HttpServletRequest request) {
         return buildErrorResponse(e, HttpStatus.UNAUTHORIZED, e.getMessage(), request);
     }

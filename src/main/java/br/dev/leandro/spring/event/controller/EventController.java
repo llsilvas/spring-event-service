@@ -1,6 +1,6 @@
 package br.dev.leandro.spring.event.controller;
 
-import br.dev.leandro.spring.event.controller.dto.EventDto;
+import br.dev.leandro.spring.event.dto.EventDto;
 import br.dev.leandro.spring.event.entity.Event;
 import br.dev.leandro.spring.event.mapper.EventMapper;
 import br.dev.leandro.spring.event.service.EventService;

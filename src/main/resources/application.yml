@@ -1,6 +1,10 @@
+# Porta HTTP padrão
+server:
+  port: ${SERVER_PORT:8092}
 # ------------------------------------
 # Configuração base da aplicação
 # ------------------------------------
+
 spring:
   # Nome da aplicação, pode ser sobrescrito via env VAR
   application:
@@ -26,16 +30,16 @@ spring:
       hibernate:
         format_sql: true    # formata SQL no console
     open-in-view: false    # evita manutenção de sessão aberta
-
 # Configuração de documentação
+
 springdoc:
   api-docs:
     path: /event/api-docs
   swagger-ui:
     path: /event/swagger-ui.html
   default-produces-media-type: application/json
-
 # Endpoints de management (health, metrics, etc.)
+
 management:
   endpoints:
     web:
@@ -44,8 +48,8 @@ management:
   tracing:
     sampling:
       probability: 1.0      # amostragem 100% para tracing
-
 # Padrões de log e níveis comuns
+
 logging:
   pattern:
     correlation: '%X{traceId:-} %X{spanId:-}'
@@ -58,8 +62,8 @@ logging:
     org.springframework.security: INFO
     io.opentelemetry: INFO
     io.micrometer: INFO
-
 # Configurações OpenTelemetry
+
 otel:
   instrumentation:
     jdbc:
@@ -68,11 +72,11 @@ otel:
     exporter: none         # desabilita exportação de logs
   metrics:
     exporter: none         # desabilita exportação de métricas
-
 # Versão da aplicação
-app:
-  version: @project.version@
 
-# Porta HTTP padrão
-server:
-  port: ${SERVER_PORT:8092}
+app:
+  contact:
+    email: lsilva.info@gmail.com
+  name: Event Service
+  title: "Serviço de cadastro de Eventos"
+  version: @project.version@

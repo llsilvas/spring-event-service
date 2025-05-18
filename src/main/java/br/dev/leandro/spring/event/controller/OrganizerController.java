@@ -1,8 +1,8 @@
 package br.dev.leandro.spring.event.controller;
 
-import br.dev.leandro.spring.event.controller.dto.OrganizerCreateDto;
-import br.dev.leandro.spring.event.controller.dto.OrganizerDto;
-import br.dev.leandro.spring.event.controller.dto.OrganizerUpdateDto;
+import br.dev.leandro.spring.event.dto.OrganizerCreateDto;
+import br.dev.leandro.spring.event.dto.OrganizerDto;
+import br.dev.leandro.spring.event.dto.OrganizerUpdateDto;
 import br.dev.leandro.spring.event.entity.Organizer;
 import br.dev.leandro.spring.event.mapper.OrganizerMapper;
 import br.dev.leandro.spring.event.service.OrganizerService;
@@ -74,7 +74,7 @@ public class OrganizerController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     @CacheEvict(allEntries = true)
     public ResponseEntity<OrganizerDto> createOrganizer(
-            @Valid @RequestBody final OrganizerCreateDto organizerCreateDto,
+            @Valid @RequestBody OrganizerCreateDto organizerCreateDto,
             @AuthenticationPrincipal Jwt jwt) {
 
         String userId = jwt.getSubject();
@@ -102,9 +102,13 @@ public class OrganizerController {
     @CacheEvict(allEntries = true)
     public ResponseEntity<OrganizerDto> updateOrganizer(
             @Parameter(description = "ID do organizador") @PathVariable final Long id,
-            @Valid @RequestBody final OrganizerUpdateDto organizerUpdateDto) {
+            @Valid @RequestBody final OrganizerUpdateDto organizerUpdateDto,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String userId = jwt.getSubject();
+
         log.info("Atualizando organizador com ID: {}", id);
-        Organizer organizer = organizerService.update(id, organizerUpdateDto);
+        Organizer organizer = organizerService.update(id, organizerUpdateDto, userId);
         log.info("Organizador atualizado: {}", organizer.getId());
         return ResponseEntity.ok(organizerMapper.toDto(organizer));
     }

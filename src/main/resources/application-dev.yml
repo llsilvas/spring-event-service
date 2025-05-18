@@ -1,16 +1,18 @@
 spring:
-  profiles: dev
+  config:
+    activate:
+      on-profile: dev
 
   datasource:
     # MySQL ambiente dev
-    url: jdbc:mysql://${DB_HOST:dev-db.internal}:3306/ticketdb
-    username: ${DB_USER:dev_user}
-    password: ${DB_PASSWORD:dev_pass}
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/ticketdb?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:admin}
 
   flyway:
-    url: jdbc:mysql://${DB_HOST:dev-db.internal}:3306/ticketdb
-    user: ${DB_USER:dev_user}
-    password: ${DB_PASSWORD:dev_pass}
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/ticketdb?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    user: ${DB_USER:root}
+    password: ${DB_PASSWORD:admin}
 
   jpa:
     hibernate:
