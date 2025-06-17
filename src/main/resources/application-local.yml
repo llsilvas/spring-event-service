@@ -10,19 +10,13 @@ spring:
     password: ${DB_PASSWORD:admin}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  flyway:
-    # migrações Flyway local
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/ticketdb?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
-    user: ${DB_USER:root}
-    password: ${DB_PASSWORD:admin}
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    enabled: true
+
 
   jpa:
     hibernate:
-      ddl-auto: none      # atualiza schema automaticamente
-    show-sql: true          # exibe SQL no console
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
 
   security:
     oauth2:

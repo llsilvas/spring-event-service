@@ -7,12 +7,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "events")
@@ -22,8 +25,14 @@ import java.util.List;
 @Builder
 public class Event {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(length = 36,
+            columnDefinition = "CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
+            updatable = false,
+            nullable = false
+    )
+    @JdbcTypeCode(SqlTypes.CHAR)
+    private UUID id;
 
     @Column(nullable = false)
     private String name;
@@ -44,8 +53,14 @@ public class Event {
     @Column(nullable = false)
     private EventStatus status;
 
-    @Column(name = "organizer_id", nullable = false)
-    private Long organizerId;
+    @Column(name = "organizer_id",
+            length = 36,
+            columnDefinition = "CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
+            updatable = false,
+            nullable = false
+    )
+    @JdbcTypeCode(SqlTypes.CHAR)
+    private UUID organizerId;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TicketType> ticketTypes;

@@ -30,12 +30,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 /**
  * Controller para gerenciamento de organizadores de eventos.
  */
 @Slf4j
 @RestController
-@RequestMapping("/organizers")
+@RequestMapping("/events/organizers")
 @Tag(name = "Organizadores", description = "API para gerenciamento de organizadores de eventos")
 @CacheConfig(cacheNames = "organizers")
 public class OrganizerController {
@@ -101,7 +103,7 @@ public class OrganizerController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     @CacheEvict(allEntries = true)
     public ResponseEntity<OrganizerDto> updateOrganizer(
-            @Parameter(description = "ID do organizador") @PathVariable final Long id,
+            @Parameter(description = "ID do organizador") @PathVariable final UUID id,
             @Valid @RequestBody final OrganizerUpdateDto organizerUpdateDto,
             @AuthenticationPrincipal Jwt jwt) {
 
@@ -127,7 +129,7 @@ public class OrganizerController {
     @Cacheable(key = "#id")
     public ResponseEntity<OrganizerCreateDto> getOrganizerById(
             @Parameter(description = "ID do organizador") 
-            @PathVariable final Long id) {
+            @PathVariable final UUID id) {
         log.info("Buscando organizador com ID: {}", id);
         OrganizerCreateDto organizerCreateDto = organizerService.getById(id);
         return ResponseEntity.ok(organizerCreateDto);
@@ -167,7 +169,7 @@ public class OrganizerController {
     @CacheEvict(allEntries = true)
     public ResponseEntity<Void> deleteOrganizer(
             @Parameter(description = "ID do organizador") 
-            @PathVariable final Long id) {
+            @PathVariable final UUID id) {
         log.info("Removendo organizador com ID: {}", id);
         organizerService.delete(id);
         log.info("Organizador removido: {}", id);

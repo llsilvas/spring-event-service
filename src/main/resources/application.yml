@@ -30,6 +30,16 @@ spring:
       hibernate:
         format_sql: true    # formata SQL no console
     open-in-view: false    # evita manutenção de sessão aberta
+
+  flyway:
+    # migrações Flyway local
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/ticketdb?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    user: ${DB_USER:root}
+    password: ${DB_PASSWORD:admin}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    enabled: true
+
 # Configuração de documentação
 
 springdoc:

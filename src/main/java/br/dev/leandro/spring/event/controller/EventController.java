@@ -17,14 +17,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 /**
  * Controller para gerenciamento de eventos.
@@ -49,10 +46,10 @@ public class EventController {
      * Construtor.
      *
      * @param eventServiceParam Serviço de eventos
-     * @param eventMapperParam Mapeador de eventos
+     * @param eventMapperParam  Mapeador de eventos
      */
     public EventController(final EventService eventServiceParam,
-            final EventMapper eventMapperParam) {
+                           final EventMapper eventMapperParam) {
         this.eventService = eventServiceParam;
         this.eventMapper = eventMapperParam;
     }
@@ -70,9 +67,11 @@ public class EventController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     @CacheEvict(allEntries = true)
     public ResponseEntity<EventDto> create(
-            @Valid @RequestBody final EventDto eventDto) {
+            @Valid @RequestBody final EventDto eventDto,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
         log.info("Criando novo evento: {}", eventDto.name());
-        Event event = eventService.create(eventDto);
+        Event event = eventService.create(userId, eventDto);
         log.info("Evento criado com ID: {}", event.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(eventMapper.toDto(event));
@@ -81,21 +80,21 @@ public class EventController {
     /**
      * Atualiza um evento existente.
      *
-     * @param id ID do evento a ser atualizado
+     * @param id       ID do evento a ser atualizado
      * @param eventDto Novos dados do evento
      * @return Evento atualizado
      */
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar evento", 
+    @Operation(summary = "Atualizar evento",
             description = "Atualiza um evento existente")
-    @ApiResponse(responseCode = "200", 
+    @ApiResponse(responseCode = "200",
             description = "Evento atualizado com sucesso")
     @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     @ApiResponse(responseCode = "400", description = "Dados inválidos")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     @CacheEvict(allEntries = true)
     public ResponseEntity<EventDto> update(
-            @Parameter(description = "ID do evento") @PathVariable final Long id,
+            @Parameter(description = "ID do evento") @PathVariable final UUID id,
             @Valid @RequestBody final EventDto eventDto) {
         log.info("Atualizando evento com ID: {}", id);
         Event event = eventService.update(id, eventDto);
@@ -110,14 +109,14 @@ public class EventController {
      * @return Evento encontrado
      */
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar evento por ID", 
+    @Operation(summary = "Buscar evento por ID",
             description = "Retorna um evento pelo ID")
     @ApiResponse(responseCode = "200", description = "Evento encontrado")
     @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     @Cacheable(key = "#id")
     public ResponseEntity<EventDto> getById(
-            @Parameter(description = "ID do evento") 
-            @PathVariable final Long id) {
+            @Parameter(description = "ID do evento")
+            @PathVariable final UUID id) {
         log.info("Buscando evento com ID: {}", id);
         EventDto eventDto = eventService.getById(id);
         return ResponseEntity.ok(eventDto);
@@ -130,12 +129,12 @@ public class EventController {
      * @return Lista de eventos
      */
     @GetMapping
-    @Operation(summary = "Listar eventos", 
+    @Operation(summary = "Listar eventos",
             description = "Lista todos os eventos com paginação")
     @ApiResponse(responseCode = "200", description = "Lista de eventos")
     @Cacheable
     public ResponseEntity<Iterable<EventDto>> listEvents(final Pageable pageable) {
-        log.info("Listando eventos. Page: {}, Size: {}", 
+        log.info("Listando eventos. Page: {}, Size: {}",
                 pageable.getPageNumber(), pageable.getPageSize());
         Iterable<EventDto> eventDtos = eventService.getAll(pageable);
         return ResponseEntity.ok(eventDtos);
@@ -148,16 +147,16 @@ public class EventController {
      * @return Sem conteúdo
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Remover evento", 
+    @Operation(summary = "Remover evento",
             description = "Remove um evento (soft delete)")
-    @ApiResponse(responseCode = "204", 
+    @ApiResponse(responseCode = "204",
             description = "Evento removido com sucesso")
     @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     @CacheEvict(allEntries = true)
     public ResponseEntity<Void> delete(
-            @Parameter(description = "ID do evento") 
-            @PathVariable final Long id) {
+            @Parameter(description = "ID do evento")
+            @PathVariable final UUID id) {
         log.info("Removendo evento com ID: {}", id);
         eventService.delete(id);
         log.info("Evento removido: {}", id);

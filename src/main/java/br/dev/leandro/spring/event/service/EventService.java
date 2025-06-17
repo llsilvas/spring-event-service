@@ -5,14 +5,16 @@ import br.dev.leandro.spring.event.entity.Event;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.UUID;
+
 public interface EventService {
 
-    Event create(EventDto dto);
-    Event update (Long id, EventDto dto);
-    EventDto getById(Long id);
+    Event create(String userId, EventDto dto);
+    Event update (UUID id, EventDto dto);
+    EventDto getById(UUID id);
 
     Page<EventDto> getAll(Pageable pageable);
 
-    void delete(Long id);
+    void delete(UUID id);
 
 }

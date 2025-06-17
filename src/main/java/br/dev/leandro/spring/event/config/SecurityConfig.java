@@ -23,7 +23,7 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Slf4j
 @Configuration
-@Profile("!test && !local")
+@Profile("!test")
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
@@ -39,14 +39,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            log.error("Erro de autenticação: {}", authException.getMessage());
-                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.getWriter().write("{\"error\":\"Não autorizado\"}");
-                        })
-                )
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos
                         .requestMatchers("/actuator/**").permitAll()
@@ -57,6 +49,14 @@ public class SecurityConfig {
                         .requestMatchers("/event/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/event/api/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated() // Qualquer outra requisição deve estar autenticada
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            log.error("Erro de autenticação: {}", authException.getMessage());
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.getWriter().write("{\"error\":\"Não autorizado\"}");
+                        })
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt

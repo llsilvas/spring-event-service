@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @Component
 public class CustomJwtAuthenticationConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
+    private static final String ROLES = "roles";
     private final String serviceName;
 
     public CustomJwtAuthenticationConverter(@Value("${spring.keycloak.admin.client-id:}") String applicationName) {
@@ -58,11 +59,11 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Collecti
 
         try {
             Map<String, Object> serviceAccess = (Map<String, Object>) resourceAccess.get(serviceName);
-            if (serviceAccess == null || !serviceAccess.containsKey("roles")) {
+            if (serviceAccess == null || !serviceAccess.containsKey(ROLES)) {
                 return Collections.emptyList();
             }
 
-            List<String> roles = (List<String>) serviceAccess.get("roles");
+            List<String> roles = (List<String>) serviceAccess.get(ROLES);
             if (roles == null || roles.isEmpty()) {
                 return Collections.emptyList();
             }
@@ -82,13 +83,13 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Collecti
 
     private Collection<GrantedAuthority> extractRealmAccessRoles(Jwt jwt) {
         Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
-        if (realmAccess == null || !realmAccess.containsKey("roles")) {
+        if (realmAccess == null || !realmAccess.containsKey(ROLES)) {
             log.debug("No realm_access.roles claim found in JWT");
             return Collections.emptyList();
         }
 
         try {
-            List<String> roles = (List<String>) realmAccess.get("roles");
+            List<String> roles = (List<String>) realmAccess.get(ROLES);
             if (roles == null || roles.isEmpty()) {
                 return Collections.emptyList();
             }

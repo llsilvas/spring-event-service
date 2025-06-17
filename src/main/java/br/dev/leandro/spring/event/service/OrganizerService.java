@@ -8,13 +8,15 @@ import org.springframework.data.domain.Pageable;
 
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.UUID;
+
 public interface OrganizerService {
 
     Organizer create(String userId, OrganizerCreateDto organizerCreateDto);
-    Organizer update(Long id, OrganizerUpdateDto organizerUpdateDto, String userId) throws AccessDeniedException;
-    OrganizerCreateDto getById(Long id);
+    Organizer update(UUID id, OrganizerUpdateDto organizerUpdateDto, String userId) throws AccessDeniedException;
+    OrganizerCreateDto getById(UUID id);
 
     Page<OrganizerCreateDto> getAll(Pageable pageable);
 
-    void delete(Long id);
+    void delete(UUID id);
 }

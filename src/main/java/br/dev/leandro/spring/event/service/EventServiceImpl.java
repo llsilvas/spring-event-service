@@ -6,9 +6,12 @@ import br.dev.leandro.spring.event.entity.enums.EventStatus;
 import br.dev.leandro.spring.event.exception.ResourceNotFoundException;
 import br.dev.leandro.spring.event.mapper.EventMapper;
 import br.dev.leandro.spring.event.repository.EventRepository;
+import br.dev.leandro.spring.event.utils.SecurityUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -22,21 +25,29 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Event create(EventDto dto) {
+    public Event create(String userId, EventDto dto) {
+        String user = SecurityUtils.getUser();
+
         Event event = eventMapper.toEntity(dto);
+        event.setStatus(EventStatus.DRAFT);
+        event.setOrganizerId(UUID.fromString(userId));
+        event.setCreatedBy(user);
+
         return eventRepository.save(event);
     }
 
     @Override
-    public Event update(Long id, EventDto dto) {
+    public Event update(UUID id, EventDto dto) {
+        String user = SecurityUtils.getUser();
         Event event = eventRepository.findByIdAndStatus(id, EventStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException(EVENT_NOT_FOUND_MESSAGE));
+        event.setUpdatedBy(user);
         eventMapper.updateEntityFromDto(dto, event);
         return eventRepository.save(event);
     }
 
     @Override
-    public EventDto getById(Long id) {
+    public EventDto getById(UUID id) {
         return eventRepository.findByIdAndStatus(id, EventStatus.ACTIVE)
                 .map(eventMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException(EVENT_NOT_FOUND_MESSAGE));
@@ -49,7 +60,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(UUID id) {
         eventRepository.findByIdAndStatus(id, EventStatus.ACTIVE)
                 .map(event -> {
                     event.setStatus(EventStatus.DELETED);

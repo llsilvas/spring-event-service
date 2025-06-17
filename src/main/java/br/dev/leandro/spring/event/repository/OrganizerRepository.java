@@ -7,10 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
-public interface OrganizerRepository extends PagingAndSortingRepository<Organizer, Long> {
+public interface OrganizerRepository extends PagingAndSortingRepository<Organizer, UUID> {
 
-    Optional<Organizer> findByIdAndStatus(Long id, OrganizerStatus organizerStatus);
+    Optional<Organizer> findByIdAndStatus(UUID id, OrganizerStatus organizerStatus);
 
     Page<Organizer> findAllByStatus(OrganizerStatus organizerStatus, Pageable pageable);
 

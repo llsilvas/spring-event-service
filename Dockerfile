@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM llsilvas/java21-maven-otel:latest as builder
+FROM llsilvas/java21-maven-otel:2.16.0 as builder
 WORKDIR /app
 
 ## Copia o pom.xml e baixa as dependências
@@ -50,7 +50,7 @@ ENV KEYCLOAK_URL=${KEYCLOAK_URL}
 ENV KEYCLOAK_JWK_SET_URI=${KEYCLOAK_JWK_SET_URI}
 ENV KEYCLOAK_ISSUER_URI=${KEYCLOAK_ISSUER_URI}
 ENV SPRING_CONFIG_SERVER=${SPRING_CONFIG_SERVER}
-ENV JAVA_OPTS=${JAVA_OPTS}
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=50 -XX:+ParallelRefProcEnabled"
 
 # Exposição da porta da aplicação
 EXPOSE 8092

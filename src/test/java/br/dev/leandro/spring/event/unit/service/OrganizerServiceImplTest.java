@@ -21,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -49,7 +50,7 @@ class OrganizerServiceImplTest {
 
         // Criar Organizador
         organizer = Organizer.builder()
-                .id(1L)
+                .id(UUID.randomUUID())
                 .userId("user-uuid-123")
                 .organizationName("Teste de Organizador")
                 .status(OrganizerStatus.ACTIVE)
@@ -59,7 +60,7 @@ class OrganizerServiceImplTest {
                 .build();
 
         // Criar OrganizerDto
-        organizerCreateDto = new OrganizerCreateDto("asc-333333", "Teste Eventos", "teste@abceventos.com", "1111-1111", "111111111111-22");
+        organizerCreateDto = new OrganizerCreateDto( "Teste Eventos", "teste@abceventos.com", "1111-1111", "111111111111-22");
         new OrganizerUpdateDto("Teste Organization", "teste@teste.com", "11 49449944", "11223344-55", OrganizerStatus.ACTIVE);
     }
 
@@ -130,12 +131,12 @@ class OrganizerServiceImplTest {
         @DisplayName("Deve atualizar um organizador existente com sucesso quando o usuário é o proprietário")
         void shouldUpdateExistingOrganizer() {
             // Dado
-            when(organizerRepository.findByIdAndStatus(1L, OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
+            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
             doNothing().when(organizerMapper).updateEntityFromUpdateDto(organizerUpdateDto, organizer);
             when(organizerRepository.save(organizer)).thenReturn(organizer);
 
             // Quando
-            Organizer result = organizerService.update(1L, organizerUpdateDto, "user-uuid-123");
+            Organizer result = organizerService.update(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), organizerUpdateDto, "user-uuid-123");
 
             // Então
             assertNotNull(result, "O resultado não deve ser nulo");
@@ -148,7 +149,7 @@ class OrganizerServiceImplTest {
             assertEquals(organizer.getDocumentNumber(), result.getDocumentNumber(), "O número do documento deve corresponder");
 
             // Verificar interações
-            verify(organizerRepository, times(1)).findByIdAndStatus(1L, OrganizerStatus.ACTIVE);
+            verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
             verify(organizerMapper, times(1)).updateEntityFromUpdateDto(organizerUpdateDto, organizer);
             verify(organizerRepository, times(1)).save(organizer);
             verifyNoMoreInteractions(organizerMapper, organizerRepository);
@@ -158,7 +159,7 @@ class OrganizerServiceImplTest {
         @DisplayName("Deve lançar AccessDeniedException ao atualizar um organizador por um usuário não autorizado")
         void shouldThrowAccessDeniedExceptionWhenUnauthorizedUser() {
             // Dado
-            when(organizerRepository.findByIdAndStatus(1L, OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
+            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
 
             // Configurar o contexto de segurança para simular um usuário sem permissões de admin
             org.springframework.security.core.Authentication authentication = mock(org.springframework.security.core.Authentication.class);
@@ -172,11 +173,11 @@ class OrganizerServiceImplTest {
             try {
                 // Quando/Então
                 assertThrows(org.springframework.security.access.AccessDeniedException.class,
-                        () -> organizerService.update(1L, organizerUpdateDto, "different-user-id"),
+                        () -> organizerService.update(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), organizerUpdateDto, "different-user-id"),
                         "Deve lançar AccessDeniedException quando o usuário não é o proprietário nem admin");
 
                 // Verificar interações
-                verify(organizerRepository, times(1)).findByIdAndStatus(1L, OrganizerStatus.ACTIVE);
+                verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
                 verifyNoMoreInteractions(organizerRepository);
                 verifyNoInteractions(organizerMapper);
             } finally {
@@ -190,17 +191,17 @@ class OrganizerServiceImplTest {
         @DisplayName("Deve lançar ResourceNotFoundException ao atualizar um organizador inexistente")
         void shouldThrowWhenUpdatingNonExistentOrganizer() {
             // Dado
-            when(organizerRepository.findByIdAndStatus(1L, OrganizerStatus.ACTIVE)).thenReturn(Optional.empty());
+            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.empty());
 
             // Quando/Então
             ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                    () -> organizerService.update(1L, organizerUpdateDto, "user-uuid-123"),
+                    () -> organizerService.update(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), organizerUpdateDto, "user-uuid-123"),
                     "Deve lançar ResourceNotFoundException quando o organizador não existe");
 
             assertEquals("Organizador não encontrado!", exception.getMessage(), "A mensagem de exceção deve corresponder");
 
             // Verificar interações
-            verify(organizerRepository, times(1)).findByIdAndStatus(1L, OrganizerStatus.ACTIVE);
+            verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
             verifyNoMoreInteractions(organizerRepository);
             verifyNoInteractions(organizerMapper);
         }
@@ -210,17 +211,17 @@ class OrganizerServiceImplTest {
         void shouldHandleNullInput() {
             // Dado
             OrganizerUpdateDto nullDto = null;
-            when(organizerRepository.findByIdAndStatus(1L, OrganizerStatus.ACTIVE)).thenReturn(Optional.empty());
+            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.empty());
 
             // Quando/Então
             ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                    () -> organizerService.update(1L, nullDto, "user-uuid-123"),
+                    () -> organizerService.update(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), nullDto, "user-uuid-123"),
                     "Deve lançar ResourceNotFoundException quando a entrada é nula (comportamento atual da implementação)");
 
             assertEquals("Organizador não encontrado!", exception.getMessage(), "A mensagem de exceção deve corresponder");
 
             // Verificar interações
-            verify(organizerRepository, times(1)).findByIdAndStatus(1L, OrganizerStatus.ACTIVE);
+            verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
             verifyNoMoreInteractions(organizerRepository);
             verifyNoInteractions(organizerMapper);
         }
@@ -234,11 +235,11 @@ class OrganizerServiceImplTest {
         @DisplayName("Deve retornar organizador por ID com sucesso")
         void shouldReturnOrganizerById() {
             // Dado
-            when(organizerRepository.findByIdAndStatus(1L, OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
+            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
             when(organizerMapper.toCreateDto(organizer)).thenReturn(organizerCreateDto);
 
             // Quando
-            OrganizerCreateDto result = organizerService.getById(1L);
+            OrganizerCreateDto result = organizerService.getById(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"));
 
             // Então
             assertNotNull(result, "O resultado não deve ser nulo");
@@ -248,7 +249,7 @@ class OrganizerServiceImplTest {
             assertEquals(organizerCreateDto.documentNumber(), result.documentNumber(), "O número do documento deve corresponder");
 
             // Verificar interações
-            verify(organizerRepository, times(1)).findByIdAndStatus(1L, OrganizerStatus.ACTIVE);
+            verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
             verify(organizerMapper, times(1)).toCreateDto(organizer);
             verifyNoMoreInteractions(organizerMapper, organizerRepository);
         }
@@ -257,17 +258,17 @@ class OrganizerServiceImplTest {
         @DisplayName("Deve lançar ResourceNotFoundException quando organizador não for encontrado pelo ID")
         void shouldThrowWhenOrganizerNotFoundById() {
             // Dado
-            when(organizerRepository.findByIdAndStatus(1L, OrganizerStatus.ACTIVE)).thenReturn(Optional.empty());
+            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.empty());
 
             // Quando/Então
             ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                    () -> organizerService.getById(1L),
+                    () -> organizerService.getById(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63")),
                     "Deve lançar ResourceNotFoundException quando o organizador não existe");
 
             assertEquals("Organizador não encontrado!", exception.getMessage(), "A mensagem de exceção deve corresponder");
 
             // Verificar interações
-            verify(organizerRepository, times(1)).findByIdAndStatus(1L, OrganizerStatus.ACTIVE);
+            verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
             verifyNoMoreInteractions(organizerRepository);
             verifyNoInteractions(organizerMapper);
         }
@@ -374,17 +375,17 @@ class OrganizerServiceImplTest {
         @DisplayName("Deve excluir logicamente um organizador")
         void shouldSoftDeleteOrganizer() {
             // Dado
-            when(organizerRepository.findByIdAndStatus(1L, OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
+            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
             when(organizerRepository.save(organizer)).thenReturn(organizer);
 
             // Quando
-            organizerService.delete(1L);
+            organizerService.delete(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"));
 
             // Então
             assertEquals(OrganizerStatus.DELETED, organizer.getStatus(), "O status do organizador deve ser DELETED");
 
             // Verificar interações
-            verify(organizerRepository, times(1)).findByIdAndStatus(1L, OrganizerStatus.ACTIVE);
+            verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
             verify(organizerRepository, times(1)).save(organizer);
             verifyNoMoreInteractions(organizerRepository);
         }
@@ -393,17 +394,17 @@ class OrganizerServiceImplTest {
         @DisplayName("Deve lançar ResourceNotFoundException ao excluir um organizador inexistente")
         void shouldThrowWhenDeletingNonExistentOrganizer() {
             // Dado
-            when(organizerRepository.findByIdAndStatus(1L, OrganizerStatus.ACTIVE)).thenReturn(Optional.empty());
+            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.empty());
 
             // Quando/Então
             ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                    () -> organizerService.delete(1L),
+                    () -> organizerService.delete(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63")),
                     "Deve lançar ResourceNotFoundException quando o organizador não existe");
 
             assertEquals("Organizador não encontrado!", exception.getMessage(), "A mensagem de exceção deve corresponder");
 
             // Verificar interações
-            verify(organizerRepository, times(1)).findByIdAndStatus(1L, OrganizerStatus.ACTIVE);
+            verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
             verifyNoMoreInteractions(organizerRepository);
         }
 

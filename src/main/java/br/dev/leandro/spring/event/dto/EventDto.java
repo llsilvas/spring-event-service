@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Future;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Data Transfer Object for Event entity.
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
  * @param status Status do evento
  */
 public record EventDto(
-        Long id,
+        UUID id,
 
         @NotBlank(message = "Nome do evento é obrigatório")
         @Size(message = "Nome deve ter tamanho adequado")

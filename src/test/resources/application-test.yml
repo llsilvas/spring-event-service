@@ -1,4 +1,7 @@
 spring:
+  config:
+    activate:
+      on-profile: test
 
   datasource:
     # H2 em memória para testes
@@ -11,12 +14,8 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
-
   flyway:
     enabled: false    # desabilita Flyway em testes
-  config:
-    activate:
-      on-profile: test
 
 loki:
   # desabilita Loki em CI/Testes

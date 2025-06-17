@@ -8,11 +8,14 @@ import br.dev.leandro.spring.event.exception.BusinessException;
 import br.dev.leandro.spring.event.exception.ResourceNotFoundException;
 import br.dev.leandro.spring.event.mapper.OrganizerMapper;
 import br.dev.leandro.spring.event.repository.OrganizerRepository;
+import br.dev.leandro.spring.event.utils.SecurityUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class OrganizerServiceImpl implements OrganizerService {
@@ -28,22 +31,28 @@ public class OrganizerServiceImpl implements OrganizerService {
 
     @Override
     public Organizer create(String userId, OrganizerCreateDto organizerCreateDto) {
+        String user = SecurityUtils.getUser();
         if(organizerRepository.existsByUserId(userId)){
             throw new BusinessException("Organizador já existe.");
         }
         Organizer organizer = organizerMapper.toEntity(organizerCreateDto);
+        organizer.setUserId(userId);
+        organizer.setStatus(OrganizerStatus.ACTIVE);
+        organizer.setCreatedBy(user);
         return organizerRepository.save(organizer);
     }
 
     @Override
-    public Organizer update(Long id, OrganizerUpdateDto organizerUpdateDto, String userId){
+    public Organizer update(UUID id, OrganizerUpdateDto organizerUpdateDto, String userId){
+        String user = SecurityUtils.getUser();
         Organizer organizer = organizerRepository.findByIdAndStatus(id, OrganizerStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException(ORGANIZER_NOT_FOUND_MESSAGE));
-        
+
         if(!organizer.getUserId().equals(userId) && !isAdmin()){
             throw new AccessDeniedException("Você não tem permissao para atualizar este organizador");
         }
         organizerMapper.updateEntityFromUpdateDto(organizerUpdateDto, organizer);
+        organizer.setUpdatedBy(user);
         return organizerRepository.save(organizer);
     }
 
@@ -52,9 +61,8 @@ public class OrganizerServiceImpl implements OrganizerService {
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
     }
 
-
     @Override
-    public OrganizerCreateDto getById(Long id) {
+    public OrganizerCreateDto getById(UUID id) {
         return organizerRepository.findByIdAndStatus(id, OrganizerStatus.ACTIVE)
                 .map(organizerMapper::toCreateDto)
                 .orElseThrow(() -> new ResourceNotFoundException(ORGANIZER_NOT_FOUND_MESSAGE));
@@ -67,7 +75,7 @@ public class OrganizerServiceImpl implements OrganizerService {
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(UUID id) {
         organizerRepository.findByIdAndStatus(id, OrganizerStatus.ACTIVE)
                 .map(organizer -> {
                     organizer.setStatus(OrganizerStatus.DELETED);
