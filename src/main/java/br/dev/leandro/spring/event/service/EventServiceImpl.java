@@ -55,7 +55,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Page<EventDto> getAll(Pageable pageable) {
-        return eventRepository.findAll(pageable)
+        return eventRepository.findAllByStatus(EventStatus.ACTIVE, pageable)
                 .map(eventMapper::toDto);
     }
 

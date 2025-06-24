@@ -296,7 +296,7 @@ class EventServiceImplTest {
             // Dado
             Pageable pageable = PageRequest.of(0, 10);
             PageImpl<Event> page = new PageImpl<>(List.of(event));
-            when(eventRepository.findAll(pageable)).thenReturn(page);
+            when(eventRepository.findAllByStatus(EventStatus.ACTIVE, pageable)).thenReturn(page);
             when(eventMapper.toDto(event)).thenReturn(eventDto);
 
             // Quando
@@ -310,7 +310,7 @@ class EventServiceImplTest {
             assertEquals(1, result.getTotalElements(), "O total de elementos deve ser 1");
 
             // Verificar interações
-            verify(eventRepository, times(1)).findAll(pageable);
+            verify(eventRepository, times(1)).findAllByStatus(EventStatus.ACTIVE, pageable);
             verify(eventMapper, times(1)).toDto(event);
             verifyNoMoreInteractions(eventRepository, eventMapper);
         }
@@ -321,7 +321,7 @@ class EventServiceImplTest {
             // Dado
             Pageable pageable = PageRequest.of(0, 10);
             Page<Event> emptyPage = new PageImpl<>(List.of());
-            when(eventRepository.findAll(pageable)).thenReturn(emptyPage);
+            when(eventRepository.findAllByStatus(EventStatus.ACTIVE, pageable)).thenReturn(emptyPage);
 
             // Quando
             Page<EventDto> result = eventService.getAll(pageable);
@@ -332,7 +332,7 @@ class EventServiceImplTest {
             assertEquals(0, result.getTotalElements(), "O total de elementos deve ser 0");
 
             // Verificar interações
-            verify(eventRepository, times(1)).findAll(pageable);
+            verify(eventRepository, times(1)).findAllByStatus(EventStatus.ACTIVE, pageable);
             verifyNoMoreInteractions(eventRepository);
             verifyNoInteractions(eventMapper);
         }
@@ -345,7 +345,7 @@ class EventServiceImplTest {
 
             // Quando/Então
             // Não precisamos mockar o comportamento aqui, pois o NullPointerException
-            // ocorrerá naturalmente quando tentarmos chamar findAll com null
+            // ocorrerá naturalmente quando tentarmos chamar findAllByStatus com null
             NullPointerException exception = assertThrows(NullPointerException.class, 
                     () -> eventService.getAll(nullPageable),
                     "Deve lançar NullPointerException quando pageable é nulo (comportamento atual da implementação)");
