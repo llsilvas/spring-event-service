@@ -103,7 +103,7 @@ class EventServiceImplTest {
     @DisplayName("Testes de Criação de Evento")
     class CreateEventTests {
 
-//        @Test
+        @Test
         @DisplayName("Deve criar um novo evento com sucesso")
         void shouldCreateNewEvent() {
             // Dado

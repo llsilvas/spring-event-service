@@ -61,7 +61,7 @@ class OrganizerServiceImplTest {
 
         // Criar OrganizerDto
         organizerCreateDto = new OrganizerCreateDto( "Teste Eventos", "teste@abceventos.com", "1111-1111", "111111111111-22");
-        new OrganizerUpdateDto("Teste Organization", "teste@teste.com", "11 49449944", "11223344-55", OrganizerStatus.ACTIVE);
+        organizerUpdateDto = new OrganizerUpdateDto("Teste Organization", "teste@teste.com", "11 49449944", "11223344-55", OrganizerStatus.ACTIVE);
     }
 
     @Nested
