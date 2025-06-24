@@ -49,7 +49,7 @@ public class OrganizerServiceImpl implements OrganizerService {
                 .orElseThrow(() -> new ResourceNotFoundException(ORGANIZER_NOT_FOUND_MESSAGE));
 
         if(!organizer.getUserId().equals(userId) && !isAdmin()){
-            throw new AccessDeniedException("Você não tem permissao para atualizar este organizador");
+            throw new AccessDeniedException("Você não tem permissão para atualizar este organizador");
         }
         organizerMapper.updateEntityFromUpdateDto(organizerUpdateDto, organizer);
         organizer.setUpdatedBy(user);
