@@ -6,22 +6,27 @@
     <!-- =============================== -->
     <springProperty name="name" source="spring.application.name" defaultValue="application"/>
     <springProperty name="logLevel" source="logging.level.root" defaultValue="INFO"/>
-    <springProperty name="logPatternCorrelation" source="logging.pattern.correlation" defaultValue="%X{traceId:-MISSING},%X{spanId:-MISSING}"/>
-    <springProperty name="logPatternLevel" source="logging.pattern.level" defaultValue="%5p [%X{traceId:-MISSING},%X{spanId:-MISSING}]"/>
+    <!--    <springProperty name="logPatternCorrelation" source="logging.pattern.correlation" defaultValue="%X{traceId:-MISSING},%X{spanId:-MISSING}"/>-->
+    <!--    <springProperty name="logPatternLevel" source="logging.pattern.level" defaultValue="%5p [%X{traceId:-MISSING},%X{spanId:-MISSING}]"/>-->
+    <springProperty name="tracePattern" source="logging.pattern.correlation" defaultValue="%X{traceId:-},%X{spanId:-}"/>
 
     <!-- =============================== -->
-    <!-- Appender Console (sempre ativo) -->
+    <!-- Padrão de log reutilizável       -->
+    <!-- =============================== -->
+    <property name="COMMON_PATTERN"
+              value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level ${tracePattern} %logger{36} - %msg%n"/>
+
+    <!-- =============================== -->
+    <!-- Appender Console               -->
     <!-- =============================== -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>
-                %d{HH:mm:ss.SSS} ${logPatternLevel} %logger{36} [${logPatternCorrelation}] - %msg%n
-            </pattern>
+            <pattern>${COMMON_PATTERN}</pattern>
         </encoder>
     </appender>
 
     <!-- =============================== -->
-    <!-- Appender Loki (ambientes com observabilidade) -->
+    <!-- Appender Loki (JSON estruturado) -->
     <!-- =============================== -->
     <springProfile name="docker,dev,prod">
         <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
@@ -30,17 +35,21 @@
             </http>
             <format>
                 <label>
-                    <pattern>application=${name},host=${HOSTNAME},level=%level,traceId=%X{traceId:-MISSING},spanId=%X{spanId:-MISSING}</pattern>
+                    <pattern>
+                        application=${name},host=${HOSTNAME},level=%level,traceId=%X{traceId:-MISSING},spanId=%X{spanId:-MISSING}
+                    </pattern>
                     <readMarkers>true</readMarkers>
                 </label>
                 <message>
                     <pattern>
-                        {
-                        "level": "%level",
-                        "class": "%logger{36}",
-                        "thread": "%thread",
-                        "message": "%msg",
-                        "correlation": "${logPatternCorrelation}"
+                        {"application":"${name}",
+                        "host":"${HOSTNAME}",
+                        "thread":"%thread",
+                        "logger":"%logger",
+                        "level":"%level",
+                        "traceId":"%X{traceId:-MISSING}",
+                        "spanId":"%X{spanId:-MISSING}",
+                        "message":"%replace(%msg){'\n','\\n'}"
                         }
                     </pattern>
                 </message>
@@ -66,5 +75,11 @@
             <appender-ref ref="CONSOLE"/>
         </root>
     </springProfile>
+
+    <!-- =============================== -->
+    <!-- Bibliotecas menos verbosas        -->
+    <!-- =============================== -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
 
 </configuration>

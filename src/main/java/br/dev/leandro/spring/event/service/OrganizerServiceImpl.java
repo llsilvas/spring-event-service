@@ -1,6 +1,7 @@
 package br.dev.leandro.spring.event.service;
 
 import br.dev.leandro.spring.event.dto.OrganizerCreateDto;
+import br.dev.leandro.spring.event.dto.OrganizerDto;
 import br.dev.leandro.spring.event.dto.OrganizerUpdateDto;
 import br.dev.leandro.spring.event.entity.Organizer;
 import br.dev.leandro.spring.event.entity.enums.OrganizerStatus;
@@ -31,6 +32,13 @@ public class OrganizerServiceImpl implements OrganizerService {
 
     @Override
     public Organizer create(String userId, OrganizerCreateDto organizerCreateDto) {
+        if(organizerCreateDto == null){
+            throw new IllegalArgumentException("OrganizerCreateDto não pode ser nulo.");
+        }
+        if(userId == null || userId.isBlank()){
+            throw new IllegalArgumentException("UserId não pode ser nulo.");
+        }
+
         String user = SecurityUtils.getUser();
         if(organizerRepository.existsByUserId(userId)){
             throw new BusinessException("Organizador já existe.");
@@ -62,16 +70,16 @@ public class OrganizerServiceImpl implements OrganizerService {
     }
 
     @Override
-    public OrganizerCreateDto getById(UUID id) {
+    public OrganizerDto getById(UUID id) {
         return organizerRepository.findByIdAndStatus(id, OrganizerStatus.ACTIVE)
-                .map(organizerMapper::toCreateDto)
+                .map(organizerMapper::toDto)
                 .orElseThrow(() -> new ResourceNotFoundException(ORGANIZER_NOT_FOUND_MESSAGE));
     }
 
     @Override
-    public Page<OrganizerCreateDto> getAll(Pageable pageable) {
+    public Page<OrganizerDto> getAll(Pageable pageable) {
         return organizerRepository.findAllByStatus(OrganizerStatus.ACTIVE, pageable)
-                .map(organizerMapper::toCreateDto);
+                .map(organizerMapper::toDto);
     }
 
     @Override

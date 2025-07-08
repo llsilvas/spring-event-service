@@ -26,6 +26,13 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Event create(String userId, EventDto dto) {
+        if(dto == null){
+            throw new IllegalArgumentException("EventDto não pode ser nulo.");
+        }
+        if(userId == null || userId.isBlank()){
+            throw new IllegalArgumentException("userId não pode ser nulo ou vazio");
+        }
+
         String user = SecurityUtils.getUser();
 
         Event event = eventMapper.toEntity(dto);

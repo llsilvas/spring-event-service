@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -133,10 +134,10 @@ public class EventController {
             description = "Lista todos os eventos com paginação")
     @ApiResponse(responseCode = "200", description = "Lista de eventos")
     @Cacheable
-    public ResponseEntity<Iterable<EventDto>> listEvents(final Pageable pageable) {
+    public ResponseEntity<Page<EventDto>> listEvents(final Pageable pageable) {
         log.info("Listando eventos. Page: {}, Size: {}",
                 pageable.getPageNumber(), pageable.getPageSize());
-        Iterable<EventDto> eventDtos = eventService.getAll(pageable);
+        Page<EventDto> eventDtos = eventService.getAll(pageable);
         return ResponseEntity.ok(eventDtos);
     }
 

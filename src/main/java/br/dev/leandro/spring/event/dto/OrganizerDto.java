@@ -3,7 +3,6 @@ package br.dev.leandro.spring.event.dto;
 import br.dev.leandro.spring.event.entity.enums.OrganizerStatus;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 public record OrganizerDto(
 //        UUID id,

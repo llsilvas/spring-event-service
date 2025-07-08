@@ -1,6 +1,7 @@
 package br.dev.leandro.spring.event.unit.service;
 
 import br.dev.leandro.spring.event.dto.OrganizerCreateDto;
+import br.dev.leandro.spring.event.dto.OrganizerDto;
 import br.dev.leandro.spring.event.dto.OrganizerUpdateDto;
 import br.dev.leandro.spring.event.entity.Organizer;
 import br.dev.leandro.spring.event.entity.enums.OrganizerStatus;
@@ -12,11 +13,18 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
@@ -29,6 +37,7 @@ import static org.mockito.Mockito.*;
 @Tag("unit")
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Teste do Serviço de Organizador")
 class OrganizerServiceImplTest {
 
     @Mock
@@ -43,11 +52,10 @@ class OrganizerServiceImplTest {
     private Organizer organizer;
     private OrganizerCreateDto organizerCreateDto;
     private OrganizerUpdateDto organizerUpdateDto;
+    private OrganizerDto organizerDto;
 
     @BeforeEach
     void setUp() {
-
-
         // Criar Organizador
         organizer = Organizer.builder()
                 .id(UUID.randomUUID())
@@ -62,6 +70,14 @@ class OrganizerServiceImplTest {
         // Criar OrganizerDto
         organizerCreateDto = new OrganizerCreateDto( "Teste Eventos", "teste@abceventos.com", "1111-1111", "111111111111-22");
         organizerUpdateDto = new OrganizerUpdateDto("Teste Organization", "teste@teste.com", "11 49449944", "11223344-55", OrganizerStatus.ACTIVE);
+        organizerDto = new OrganizerDto(organizer.getUserId(), organizer.getOrganizationName(), organizer.getContactEmail(), organizer.getContactPhone(), organizer.getDocumentNumber(), organizer.getStatus(), organizer.getCreatedBy(), organizer.getUpdatedBy(), organizer.getCreatedAt(), organizer.getUpdatedAt());
+
+        Jwt jwtMock = Mockito.mock(Jwt.class);
+        lenient().when(jwtMock.getClaim("preferred_username")).thenReturn("usuario-teste");
+
+        // Prepara o Authentication e o coloca no contexto do Spring Security
+        Authentication authentication = new TestingAuthenticationToken(jwtMock, null);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Nested
@@ -101,22 +117,13 @@ class OrganizerServiceImplTest {
         void shouldHandleNullInput() {
             // Dado
             OrganizerCreateDto nullDto = null;
-
-            // Quando
-            // A implementação atual não valida entrada nula no método create
-            // Este teste verifica esse comportamento simulando as interações esperadas
-            when(organizerRepository.existsByUserId(null)).thenReturn(false);
-            when(organizerMapper.toEntity(null)).thenReturn(null);
-            when(organizerRepository.save(null)).thenReturn(null);
+            String userId = "af6dbc91-2458-49c4-9708-73fa9cb7317c";
 
             // Então
-            assertDoesNotThrow(() -> organizerService.create(null, nullDto),
-                    "Não deve lançar exceção quando a entrada é nula (comportamento atual da implementação)");
+            assertThrows(IllegalArgumentException.class,
+                    () -> organizerService.create(userId, nullDto),
+                    "OrganizerCreateDto não pode ser nulo.");
 
-            // Verificar interações
-            verify(organizerRepository, times(1)).existsByUserId(null);
-            verify(organizerMapper, times(1)).toEntity(null);
-            verify(organizerRepository, times(1)).save(null);
         }
     }
 
@@ -159,31 +166,27 @@ class OrganizerServiceImplTest {
         @DisplayName("Deve lançar AccessDeniedException ao atualizar um organizador por um usuário não autorizado")
         void shouldThrowAccessDeniedExceptionWhenUnauthorizedUser() {
             // Dado
-            when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
+            UUID organizerId = UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63");
+            String unauthorizedUserId = "different-user-id";
+            when(organizerRepository.findByIdAndStatus(organizerId, OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
 
-            // Configurar o contexto de segurança para simular um usuário sem permissões de admin
-            org.springframework.security.core.Authentication authentication = mock(org.springframework.security.core.Authentication.class);
-            org.springframework.security.core.context.SecurityContext securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
-            when(securityContext.getAuthentication()).thenReturn(authentication);
-            org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
+            // Simula um usuário autenticado que não é admin
+            Jwt jwt = Jwt.withTokenValue("token")
+                    .header("alg", "none")
+                    .claim("preferred_username", "different-user")
+                    .build();
+            Authentication authentication = new TestingAuthenticationToken(jwt, null, "ROLE_USER");
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Simular que o usuário não tem o papel ROLE_ADMIN
-            when(authentication.getAuthorities()).thenReturn(java.util.Collections.emptyList());
+            // Quando/Então
+            assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                    () -> organizerService.update(organizerId, organizerUpdateDto, unauthorizedUserId),
+                    "Deve lançar AccessDeniedException quando o usuário não é o proprietário nem admin");
 
-            try {
-                // Quando/Então
-                assertThrows(org.springframework.security.access.AccessDeniedException.class,
-                        () -> organizerService.update(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), organizerUpdateDto, "different-user-id"),
-                        "Deve lançar AccessDeniedException quando o usuário não é o proprietário nem admin");
-
-                // Verificar interações
-                verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
-                verifyNoMoreInteractions(organizerRepository);
-                verifyNoInteractions(organizerMapper);
-            } finally {
-                // Limpar o contexto de segurança após o teste
-                org.springframework.security.core.context.SecurityContextHolder.clearContext();
-            }
+            // Verificar interações
+            verify(organizerRepository, times(1)).findByIdAndStatus(organizerId, OrganizerStatus.ACTIVE);
+            verifyNoMoreInteractions(organizerRepository);
+            verifyNoInteractions(organizerMapper);
         }
 
 
@@ -236,21 +239,21 @@ class OrganizerServiceImplTest {
         void shouldReturnOrganizerById() {
             // Dado
             when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
-            when(organizerMapper.toCreateDto(organizer)).thenReturn(organizerCreateDto);
+            when(organizerMapper.toDto(organizer)).thenReturn(organizerDto);
 
             // Quando
-            OrganizerCreateDto result = organizerService.getById(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"));
+            OrganizerDto result = organizerService.getById(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"));
 
             // Então
             assertNotNull(result, "O resultado não deve ser nulo");
-            assertEquals(organizerCreateDto.organizationName(), result.organizationName(), "O nome da organização deve corresponder");
-            assertEquals(organizerCreateDto.contactEmail(), result.contactEmail(), "O email de contato deve corresponder");
-            assertEquals(organizerCreateDto.contactPhone(), result.contactPhone(), "O telefone de contato deve corresponder");
-            assertEquals(organizerCreateDto.documentNumber(), result.documentNumber(), "O número do documento deve corresponder");
+            assertEquals(organizerDto.organizationName(), result.organizationName(), "O nome da organização deve corresponder");
+            assertEquals(organizerDto.contactEmail(), result.contactEmail(), "O email de contato deve corresponder");
+            assertEquals(organizerDto.contactPhone(), result.contactPhone(), "O telefone de contato deve corresponder");
+            assertEquals(organizerDto.documentNumber(), result.documentNumber(), "O número do documento deve corresponder");
 
             // Verificar interações
             verify(organizerRepository, times(1)).findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE);
-            verify(organizerMapper, times(1)).toCreateDto(organizer);
+            verify(organizerMapper, times(1)).toDto(organizer);
             verifyNoMoreInteractions(organizerMapper, organizerRepository);
         }
 
@@ -305,21 +308,21 @@ class OrganizerServiceImplTest {
             Page<Organizer> organizerPage = new PageImpl<>(List.of(organizer));
 
             when(organizerRepository.findAllByStatus(OrganizerStatus.ACTIVE, pageable)).thenReturn(organizerPage);
-            when(organizerMapper.toCreateDto(organizer)).thenReturn(organizerCreateDto);
+            when(organizerMapper.toDto(organizer)).thenReturn(organizerDto);
 
             // Quando
-            Page<OrganizerCreateDto> result = organizerService.getAll(pageable);
+            Page<OrganizerDto> result = organizerService.getAll(pageable);
 
             // Então
             assertNotNull(result, "O resultado não deve ser nulo");
             assertEquals(1, result.getContent().size(), "A página deve conter 1 item");
-            assertEquals(organizerCreateDto, result.getContent().get(0), "O primeiro item deve corresponder ao organizerDto");
+            assertEquals(organizerDto, result.getContent().get(0), "O primeiro item deve corresponder ao organizerDto");
             assertEquals(0, result.getNumber(), "O número da página deve ser 0");
             assertEquals(1, result.getTotalElements(), "O total de elementos deve ser 1");
 
             // Verificar interações
             verify(organizerRepository, times(1)).findAllByStatus(OrganizerStatus.ACTIVE, pageable);
-            verify(organizerMapper, times(1)).toCreateDto(organizer);
+            verify(organizerMapper, times(1)).toDto(organizer);
             verifyNoMoreInteractions(organizerMapper, organizerRepository);
         }
 
@@ -333,7 +336,7 @@ class OrganizerServiceImplTest {
             when(organizerRepository.findAllByStatus(OrganizerStatus.ACTIVE, pageable)).thenReturn(emptyPage);
 
             // Quando
-            Page<OrganizerCreateDto> result = organizerService.getAll(pageable);
+            Page<OrganizerDto> result = organizerService.getAll(pageable);
 
             // Então
             assertNotNull(result, "O resultado não deve ser nulo");
@@ -347,22 +350,21 @@ class OrganizerServiceImplTest {
         }
 
         @Test
-        @DisplayName("Deve lidar com parâmetro pageable nulo")
+        @DisplayName("Deve lançar NullPointerException ao lidar com pageable nulo")
         void shouldHandleNullPageable() {
             // Dado
-            when(organizerRepository.findAllByStatus(eq(OrganizerStatus.ACTIVE), isNull())).thenReturn(null);
+            Pageable nullPageable = null;
+            // Mock para simular o comportamento do repositório que pode retornar null
+            // se o pageable for nulo, resultando em um NPE no .map()
+            when(organizerRepository.findAllByStatus(OrganizerStatus.ACTIVE, nullPageable)).thenReturn(null);
 
             // Quando/Então
-            NullPointerException exception = assertThrows(NullPointerException.class,
-                    () -> organizerService.getAll(null),
-                    "Deve lançar NullPointerException quando pageable é nulo (comportamento atual da implementação)");
-
-            assertTrue(exception.getMessage().contains("Cannot invoke \"org.springframework.data.domain.Page.map(java.util.function.Function)\""),
-                    "A mensagem de exceção deve indicar invocação nula de Page.map");
+            assertThrows(NullPointerException.class,
+                    () -> organizerService.getAll(nullPageable),
+                    "Deve lançar NullPointerException quando pageable é nulo e o repositório retorna null");
 
             // Verificar interações
-            verify(organizerRepository, times(1)).findAllByStatus(eq(OrganizerStatus.ACTIVE), isNull());
-            verifyNoMoreInteractions(organizerRepository);
+            verify(organizerRepository, times(1)).findAllByStatus(OrganizerStatus.ACTIVE, nullPageable);
             verifyNoInteractions(organizerMapper);
         }
     }

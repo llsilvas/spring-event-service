@@ -14,9 +14,9 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
-  flyway:
-    enabled: false
+      ddl-auto: update
+#  flyway:
+#    enabled: false
 
   security:
     oauth2:
