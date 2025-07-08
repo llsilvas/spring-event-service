@@ -5,7 +5,6 @@ import br.dev.leandro.spring.event.dto.OrganizerUpdateDto;
 import br.dev.leandro.spring.event.entity.Organizer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.security.access.AccessDeniedException;
 
 import java.util.UUID;

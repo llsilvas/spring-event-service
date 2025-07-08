@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -50,30 +49,27 @@ class EventServiceImplTest {
 
     private EventDto eventDto;
     private Event event;
-    private LocalDateTime startDateTime;
-    private LocalDateTime endDateTime;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         // Configurar datas
-        startDateTime = LocalDateTime.now().plusDays(1);
-        endDateTime = LocalDateTime.now().plusDays(2);
+        LocalDateTime startDateTime = LocalDateTime.now().plusDays(1);
+        LocalDateTime endDateTime = LocalDateTime.now().plusDays(2);
 
         // Criar DTO de evento
         eventDto = new EventDto(
-                UUID.randomUUID(),
-                "Evento Teste", 
-                "Descrição detalhada do evento", 
-                startDateTime, 
-                endDateTime, 
+                UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"),
+                "Evento Teste",
+                "Descrição detalhada do evento",
+                startDateTime,
+                endDateTime,
                 "Local do Evento",
                 EventStatus.ACTIVE
         );
 
         // Criar entidade de evento
         event = Event.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"))
                 .name("Evento Teste")
                 .description("Descrição detalhada do evento")
                 .location("Local do Evento")
@@ -85,12 +81,12 @@ class EventServiceImplTest {
                 .createdBy("user-id-123")
                 .build();
 
-        Jwt jwtMock = Mockito.mock(Jwt.class);
-        Mockito.when(jwtMock.getClaim("preferred_username")).thenReturn("usuario-teste");
+//        Jwt jwtMock = Mockito.mock(Jwt.class);
+//        Mockito.when(jwtMock.getClaim("preferred_username")).thenReturn("usuario-teste");
 
         // Prepara o Authentication e o coloca no contexto do Spring Security
-        Authentication authentication = new TestingAuthenticationToken(jwtMock, null);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+//        Authentication authentication = new TestingAuthenticationToken(jwtMock, null);
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @AfterEach
@@ -103,15 +99,26 @@ class EventServiceImplTest {
     @DisplayName("Testes de Criação de Evento")
     class CreateEventTests {
 
+        @BeforeEach
+        void setUp() {
+            Jwt jwtMock = Mockito.mock(Jwt.class);
+            lenient().when(jwtMock.getClaim("preferred_username")).thenReturn("usuario-teste");
+
+//             Prepara o Authentication e o coloca no contexto do Spring Security
+            Authentication authentication = new TestingAuthenticationToken(jwtMock, null);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
+
         @Test
         @DisplayName("Deve criar um novo evento com sucesso")
         void shouldCreateNewEvent() {
             // Dado
-            when(eventMapper.toEntity(eventDto)).thenReturn(event);
-            when(eventRepository.save(event)).thenReturn(event);
+            when(eventMapper.toEntity(any(EventDto.class))).thenReturn(event);
+            when(eventRepository.save(any(Event.class))).thenReturn(event);
 
             // Quando
-            Event result = eventService.create("222", eventDto);
+            Event result = eventService.create("af6dbc91-2458-49c4-9708-73fa9cb7317c", eventDto);
 
             // Então
             assertNotNull(result, "O resultado não deve ser nulo");
@@ -134,31 +141,37 @@ class EventServiceImplTest {
         void shouldHandleNullInput() {
             // Dado
             EventDto nullDto = null;
-
-            // A implementação atual não valida entrada nula no método create
-            // Este teste verifica esse comportamento simulando as interações esperadas
-            when(eventMapper.toEntity(null)).thenReturn(null);
-            when(eventRepository.save(null)).thenReturn(null);
+            String userId = "af6dbc91-2458-49c4-9708-73fa9cb7317c";
 
             // Quando/Então
-            assertDoesNotThrow(() -> eventService.create(null, nullDto),
-                    "Não deve lançar exceção quando a entrada é nula (comportamento atual da implementação)");
+            IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class,
+                    () -> eventService.create(userId, nullDto));
 
-            // Verificar interações
-            verify(eventMapper, times(1)).toEntity(null);
-            verify(eventRepository, times(1)).save(null);
+            assertEquals("EventDto não pode ser nulo.", illegalArgumentException.getMessage());
+
         }
     }
 
     @Nested
     @DisplayName("Testes de Atualização de Evento")
     class UpdateEventTests {
+
+        @BeforeEach
+        void setUp() {
+
+            Jwt jwtMock = Mockito.mock(Jwt.class);
+            Mockito.when(jwtMock.getClaim("preferred_username")).thenReturn("usuario-teste");
+
+//             Prepara o Authentication e o coloca no contexto do Spring Security
+            Authentication authentication = new TestingAuthenticationToken(jwtMock, null);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
         @Test
         @DisplayName("Deve atualizar um evento existente com sucesso")
         void shouldUpdateExistingEvent() {
             // Dado
             when(eventRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), EventStatus.ACTIVE)).thenReturn(Optional.of(event));
-            doNothing().when(eventMapper).updateEntityFromDto(eventDto, event);
+//            doNothing().when(eventMapper).updateEntityFromDto(eventDto, event);
             when(eventRepository.save(event)).thenReturn(event);
 
             // Quando
@@ -184,6 +197,7 @@ class EventServiceImplTest {
         @Test
         @DisplayName("Deve lançar ResourceNotFoundException ao atualizar um evento inexistente")
         void shouldThrowResourceNotFoundExceptionWhenEventNotFound() {
+
             UUID eventId = UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63");
             when(eventRepository.findByIdAndStatus(eventId, EventStatus.ACTIVE)).thenReturn(Optional.empty());
 
@@ -254,7 +268,7 @@ class EventServiceImplTest {
             when(eventRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), EventStatus.ACTIVE)).thenReturn(Optional.empty());
 
             // Quando/Então
-            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                     () -> eventService.getById(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63")),
                     "Deve lançar ResourceNotFoundException quando o evento não existe");
 
@@ -273,7 +287,7 @@ class EventServiceImplTest {
             when(eventRepository.findByIdAndStatus(null, EventStatus.ACTIVE)).thenReturn(Optional.empty());
 
             // Quando/Então
-            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                     () -> eventService.getById(null),
                     "Deve lançar ResourceNotFoundException quando o ID é nulo (comportamento atual da implementação)");
 
@@ -346,7 +360,7 @@ class EventServiceImplTest {
             // Quando/Então
             // Não precisamos mockar o comportamento aqui, pois o NullPointerException
             // ocorrerá naturalmente quando tentarmos chamar findAllByStatus com null
-            NullPointerException exception = assertThrows(NullPointerException.class, 
+            NullPointerException exception = assertThrows(NullPointerException.class,
                     () -> eventService.getAll(nullPageable),
                     "Deve lançar NullPointerException quando pageable é nulo (comportamento atual da implementação)");
 
@@ -386,7 +400,7 @@ class EventServiceImplTest {
             when(eventRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), EventStatus.ACTIVE)).thenReturn(Optional.empty());
 
             // Quando/Então
-            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                     () -> eventService.delete(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63")),
                     "Deve lançar ResourceNotFoundException quando o evento não existe");
 
@@ -404,7 +418,7 @@ class EventServiceImplTest {
             when(eventRepository.findByIdAndStatus(null, EventStatus.ACTIVE)).thenReturn(Optional.empty());
 
             // Quando/Então
-            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                     () -> eventService.delete(null),
                     "Deve lançar ResourceNotFoundException quando o ID é nulo (comportamento atual da implementação)");
 

@@ -31,6 +31,13 @@ public class OrganizerServiceImpl implements OrganizerService {
 
     @Override
     public Organizer create(String userId, OrganizerCreateDto organizerCreateDto) {
+        if(organizerCreateDto == null){
+            throw new IllegalArgumentException("OrganizerCreateDto não pode ser nulo.");
+        }
+        if(userId == null || userId.isBlank()){
+            throw new IllegalArgumentException("UserId não pode ser nulo.");
+        }
+
         String user = SecurityUtils.getUser();
         if(organizerRepository.existsByUserId(userId)){
             throw new BusinessException("Organizador já existe.");

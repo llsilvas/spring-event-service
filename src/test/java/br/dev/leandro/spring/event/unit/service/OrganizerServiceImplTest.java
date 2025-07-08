@@ -12,11 +12,16 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
@@ -29,6 +34,7 @@ import static org.mockito.Mockito.*;
 @Tag("unit")
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Teste do Serviço de Organizador")
 class OrganizerServiceImplTest {
 
     @Mock
@@ -46,8 +52,6 @@ class OrganizerServiceImplTest {
 
     @BeforeEach
     void setUp() {
-
-
         // Criar Organizador
         organizer = Organizer.builder()
                 .id(UUID.randomUUID())
@@ -62,6 +66,13 @@ class OrganizerServiceImplTest {
         // Criar OrganizerDto
         organizerCreateDto = new OrganizerCreateDto( "Teste Eventos", "teste@abceventos.com", "1111-1111", "111111111111-22");
         organizerUpdateDto = new OrganizerUpdateDto("Teste Organization", "teste@teste.com", "11 49449944", "11223344-55", OrganizerStatus.ACTIVE);
+
+        Jwt jwtMock = Mockito.mock(Jwt.class);
+        lenient().when(jwtMock.getClaim("preferred_username")).thenReturn("usuario-teste");
+
+        // Prepara o Authentication e o coloca no contexto do Spring Security
+        Authentication authentication = new TestingAuthenticationToken(jwtMock, null);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Nested
@@ -101,22 +112,13 @@ class OrganizerServiceImplTest {
         void shouldHandleNullInput() {
             // Dado
             OrganizerCreateDto nullDto = null;
-
-            // Quando
-            // A implementação atual não valida entrada nula no método create
-            // Este teste verifica esse comportamento simulando as interações esperadas
-            when(organizerRepository.existsByUserId(null)).thenReturn(false);
-            when(organizerMapper.toEntity(null)).thenReturn(null);
-            when(organizerRepository.save(null)).thenReturn(null);
+            String userId = "af6dbc91-2458-49c4-9708-73fa9cb7317c";
 
             // Então
-            assertDoesNotThrow(() -> organizerService.create(null, nullDto),
-                    "Não deve lançar exceção quando a entrada é nula (comportamento atual da implementação)");
+            assertThrows(IllegalArgumentException.class,
+                    () -> organizerService.create(userId, nullDto),
+                    "OrganizerCreateDto não pode ser nulo.");
 
-            // Verificar interações
-            verify(organizerRepository, times(1)).existsByUserId(null);
-            verify(organizerMapper, times(1)).toEntity(null);
-            verify(organizerRepository, times(1)).save(null);
         }
     }
 
@@ -162,13 +164,13 @@ class OrganizerServiceImplTest {
             when(organizerRepository.findByIdAndStatus(UUID.fromString("6785e97d-53d1-4be2-9233-3f8cfb549f63"), OrganizerStatus.ACTIVE)).thenReturn(Optional.of(organizer));
 
             // Configurar o contexto de segurança para simular um usuário sem permissões de admin
-            org.springframework.security.core.Authentication authentication = mock(org.springframework.security.core.Authentication.class);
-            org.springframework.security.core.context.SecurityContext securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
-            when(securityContext.getAuthentication()).thenReturn(authentication);
-            org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
+//            org.springframework.security.core.Authentication authentication = mock(org.springframework.security.core.Authentication.class);
+//            org.springframework.security.core.context.SecurityContext securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
+//            when(securityContext.getAuthentication()).thenReturn(authentication);
+//            org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
 
             // Simular que o usuário não tem o papel ROLE_ADMIN
-            when(authentication.getAuthorities()).thenReturn(java.util.Collections.emptyList());
+//            when(authentication.getAuthorities()).thenReturn(java.util.Collections.emptyList());
 
             try {
                 // Quando/Então

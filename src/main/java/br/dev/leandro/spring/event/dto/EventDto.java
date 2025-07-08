@@ -1,10 +1,10 @@
 package br.dev.leandro.spring.event.dto;
 
 import br.dev.leandro.spring.event.entity.enums.EventStatus;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Future;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
